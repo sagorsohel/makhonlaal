@@ -27,7 +27,7 @@ import {
 } from "lucide-react"
 import { resolveImageUrl } from "@/lib/utils"
 
-const AdScriptLoader = ({ html, type }: { html: string | null | undefined; type: "top" | "footer" }) => {
+const AdScriptLoader = ({ html }: { html: string | null | undefined }) => {
   const [mounted, setMounted] = React.useState(false)
 
   React.useEffect(() => {
@@ -46,15 +46,20 @@ const AdScriptLoader = ({ html, type }: { html: string | null | undefined; type:
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <style>
           html, body {
-            margin: 0;
-            padding: 0;
-            overflow: hidden;
-            background: transparent;
+            margin: 0 !important;
+            padding: 0 !important;
+            overflow: hidden !important;
+            background: transparent !important;
+            background-color: transparent !important;
             display: flex;
             justify-content: center;
             align-items: center;
             width: 100%;
             height: 100%;
+          }
+          body > div, body > table, body > iframe {
+            background: transparent !important;
+            background-color: transparent !important;
           }
         </style>
       </head>
@@ -64,15 +69,17 @@ const AdScriptLoader = ({ html, type }: { html: string | null | undefined; type:
     </html>
   `
 
-  const height = type === "top" ? 90 : 120
-
+  const width = 320
+  const height = 50
+ 
   return (
     <div className="w-full flex justify-center items-center overflow-hidden">
       <iframe
         srcDoc={iframeSrcDoc}
-        width="100%"
+        width={width}
         height={height}
-        style={{ border: "none", overflow: "hidden", background: "transparent", maxWidth: "728px" }}
+        allowTransparency={true}
+        style={{ border: "none", overflow: "hidden", background: "transparent", backgroundColor: "transparent" }}
         scrolling="no"
         title="Ad Space"
         loading="eager"
@@ -98,7 +105,7 @@ interface ClientProps {
 export default function LandingPageClient({ pageData }: ClientProps) {
   const [seconds, setSeconds] = React.useState(pageData.redirectTime)
   const [isModalOpen, setIsModalOpen] = React.useState(false)
-  
+
   // Player Interactive States
   const [isPlaying, setIsPlaying] = React.useState(false)
   const [volume, setVolume] = React.useState(80)
@@ -178,7 +185,10 @@ export default function LandingPageClient({ pageData }: ClientProps) {
 
   return (
     <main
-      className="relative flex min-h-screen flex-col items-center justify-between overflow-x-hidden px-4 py-8 text-white transition-all duration-700 select-none md:py-12 bg-black"
+      className="relative flex min-h-screen flex-col items-center justify-between overflow-x-hidden px-4 py-8 text-white transition-all duration-700 select-none md:py-12"
+      style={{
+        backgroundImage: "radial-gradient(circle at center, #2e0909 0%, #070202 100%)"
+      }}
     >
       {/* Top Bar for Auth (Back Link to Admin/Home) */}
       {!isFullScreen && (
@@ -191,6 +201,10 @@ export default function LandingPageClient({ pageData }: ClientProps) {
           </Link>
         </div>
       )}
+
+      {/* Dynamic Background Glows */}
+      <div className="absolute top-1/4 left-1/4 -z-10 h-72 w-72 rounded-full bg-red-600/10 blur-[120px] pointer-events-none" />
+      <div className="absolute bottom-1/4 right-1/4 -z-10 h-80 w-80 rounded-full bg-orange-600/5 blur-[120px] pointer-events-none" />
 
       {/* HEADER: Search Bar & Brand */}
       <header className="relative z-30 flex w-full max-w-4xl flex-col items-center gap-6">
@@ -230,7 +244,7 @@ export default function LandingPageClient({ pageData }: ClientProps) {
       {/* AD SCRIPT / TOP AD BANNER INJECTION */}
       <section className="relative z-20 w-full max-w-3xl px-4 mt-6 flex justify-center">
         {pageData.topAdsScript ? (
-          <AdScriptLoader html={pageData.topAdsScript} type="top" />
+          <AdScriptLoader html={pageData.topAdsScript} />
         ) : (
           <div
             onClick={() => setAdClicked(true)}
@@ -278,18 +292,16 @@ export default function LandingPageClient({ pageData }: ClientProps) {
 
       {/* VIDEO PLAYER CONTAINER WITH GLOW BORDER */}
       <section
-        className={`relative z-10 w-full max-w-3xl mt-8 transition-all duration-500 ${
-          isFullScreen
-            ? "fixed inset-0 max-w-none w-screen h-screen z-50 mt-0 p-0 bg-black flex items-center justify-center"
-            : "px-2"
-        }`}
+        className={`relative z-10 w-full max-w-3xl mt-8 transition-all duration-500 ${isFullScreen
+          ? "fixed inset-0 max-w-none w-screen h-screen z-50 mt-0 p-0 bg-black flex items-center justify-center"
+          : "px-2"
+          }`}
       >
         <div
-          className={`relative overflow-hidden w-full transition-all duration-500 ${
-            isFullScreen
-              ? "h-full w-full rounded-none border-0"
-              : "aspect-[16/9] rounded-[2rem] border-[3px] border-orange-500/80 shadow-[0_0_35px_rgba(249,115,22,0.3)] bg-zinc-950"
-          }`}
+          className={`relative overflow-hidden w-full transition-all duration-500 ${isFullScreen
+            ? "h-full w-full rounded-none border-0"
+            : "aspect-[16/9] rounded-[2rem] border-[3px] border-orange-500/80 shadow-[0_0_35px_rgba(249,115,22,0.3)] bg-zinc-950"
+            }`}
           onMouseMove={() => {
             if (isPlaying) {
               setShowControls(true)
@@ -298,7 +310,13 @@ export default function LandingPageClient({ pageData }: ClientProps) {
         >
           {/* Collage Background (when not playing / countdown active) */}
           {!isPlaying && (
-            <div className="absolute inset-0 bg-zinc-900 transition-transform duration-700 flex items-center justify-center">
+            <div
+              className="absolute inset-0 bg-cover bg-center bg-no-repeat transition-transform duration-700 hover:scale-[1.02]"
+              style={{
+                backgroundImage: `url('${pageData.modalImage ? resolveImageUrl(pageData.modalImage) : "/movie_collage_preview.png"}')`
+              }}
+            >
+              {/* Dark Gradient overlays */}
               <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-black/70" />
               <div className="absolute inset-0 bg-radial-gradient(circle at center, transparent 30%, rgba(0,0,0,0.85) 90%)" />
             </div>
@@ -319,9 +337,8 @@ export default function LandingPageClient({ pageData }: ClientProps) {
               <div className="absolute top-0 left-10 right-10 h-0.5 bg-gradient-to-r from-transparent via-red-500/50 to-transparent blur-[2px]" />
 
               {/* Top Bar Overlay */}
-              <div className={`absolute top-0 left-0 right-0 p-6 flex items-start justify-between bg-gradient-to-b from-black/85 via-black/40 to-transparent transition-opacity duration-300 ${
-                showControls ? "opacity-100" : "opacity-0 pointer-events-none"
-              }`}>
+              <div className={`absolute top-0 left-0 right-0 p-6 flex items-start justify-between bg-gradient-to-b from-black/85 via-black/40 to-transparent transition-opacity duration-300 ${showControls ? "opacity-100" : "opacity-0 pointer-events-none"
+                }`}>
                 <div className="flex items-center gap-3">
                   <div className="flex items-center justify-center p-2 rounded-xl bg-red-600/10 border border-red-500/20 text-red-500 shadow-inner">
                     <Film className="size-4" />
@@ -376,9 +393,8 @@ export default function LandingPageClient({ pageData }: ClientProps) {
               </div>
 
               {/* Bottom Video Controls Overlay */}
-              <div className={`absolute bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-black/95 via-black/55 to-transparent transition-opacity duration-300 ${
-                showControls ? "opacity-100" : "opacity-0 pointer-events-none"
-              }`}>
+              <div className={`absolute bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-black/95 via-black/55 to-transparent transition-opacity duration-300 ${showControls ? "opacity-100" : "opacity-0 pointer-events-none"
+                }`}>
                 {/* Progress bar slider */}
                 <div className="flex items-center gap-3 mb-4 group/slider">
                   <span className="text-xs font-mono text-zinc-400 w-12 text-right shrink-0">
@@ -570,7 +586,7 @@ export default function LandingPageClient({ pageData }: ClientProps) {
       {/* FOOTER: Ads Script Footer Injection */}
       <footer className="relative z-20 w-full max-w-3xl flex flex-col items-center gap-4 mt-12 mb-4">
         {pageData.footerAdsScript && (
-          <AdScriptLoader html={pageData.footerAdsScript} type="footer" />
+          <AdScriptLoader html={pageData.footerAdsScript} />
         )}
         <span className="text-[10px] text-zinc-600 font-semibold uppercase tracking-widest">
           © {new Date().getFullYear()} Makhonlaal Console • Secure Link System
