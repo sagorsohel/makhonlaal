@@ -34,6 +34,8 @@ import {
   RefreshCw
 } from "lucide-react"
 
+import { resolveImageUrl, sanitizeImageUrl } from "@/lib/utils"
+
 interface PageData {
   id: number
   title: string
@@ -69,6 +71,7 @@ export default function AdminPage() {
   const [headerAdsScript, setHeaderAdsScript] = React.useState("")
   const [topAdsScript, setTopAdsScript] = React.useState("")
   const [modalImage, setModalImage] = React.useState("")
+  const [isUploading, setIsUploading] = React.useState(false)
   const [modalReferralLink, setModalReferralLink] = React.useState("")
   const [redirectTime, setRedirectTime] = React.useState(5)
   const [redirectUrl, setRedirectUrl] = React.useState("")
@@ -137,6 +140,44 @@ export default function AdminPage() {
   const handleSlugChange = (val: string) => {
     setSlug(val)
     setIsSlugEdited(true)
+  }
+
+  // Handle image upload to API route
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    setIsUploading(true)
+    setFormError(null)
+
+    const formData = new FormData()
+    formData.append("file", file)
+
+    try {
+      const res = await fetch("/api/upload", {
+        method: "POST",
+        body: formData,
+      })
+
+      const data = await res.json()
+
+      if (!res.ok) {
+        throw new Error(data.error || "Failed to upload image")
+      }
+
+      if (data.success && data.url) {
+        const sanitized = sanitizeImageUrl(data.url)
+        setModalImage(sanitized || data.url)
+      } else {
+        throw new Error("Invalid response format from upload server")
+      }
+    } catch (err) {
+      console.error("Image upload failed:", err)
+      setFormError(err instanceof Error ? err.message : "Image upload failed.")
+    } finally {
+      setIsUploading(false)
+      e.target.value = ""
+    }
   }
 
   // Open Create Dialog
@@ -257,7 +298,7 @@ export default function AdminPage() {
 
   // Copy URL to Clipboard
   const handleCopyLink = (pageSlug: string, id: number) => {
-    const pageUrl = `${window.location.origin}/p/${pageSlug}`
+    const pageUrl = `${window.location.origin}/${pageSlug}`
     navigator.clipboard.writeText(pageUrl).then(() => {
       setCopiedId(id)
       setTimeout(() => {
@@ -338,67 +379,121 @@ export default function AdminPage() {
           </p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {pages.map((page) => (
-            <div
-              key={page.id}
-              className="bg-white border border-zinc-200/80 rounded-2xl p-5 flex items-center justify-between shadow-sm transition-all hover:shadow-md hover:border-zinc-300"
-            >
-              {/* Left Circular Icon */}
-              <div className="flex items-center gap-4 min-w-0">
-                <div className="size-11 rounded-xl bg-sky-50 flex items-center justify-center text-sky-500 border border-sky-100 shrink-0">
-                  <FileText className="size-5" />
-                </div>
-                <div className="text-left min-w-0 flex flex-col gap-0.5">
-                  <h4 className="font-bold text-sm text-zinc-800 truncate" title={page.title}>
-                    {page.title}
-                  </h4>
-                  <span className="text-[10px] text-zinc-400 font-semibold block uppercase">
-                    SLUG: <span className="font-mono text-zinc-600 lowercase">{page.slug}</span>
-                  </span>
-                  <div className="mt-1">
-                    <span className="text-[9px] bg-zinc-100 border border-zinc-200/60 text-zinc-600 font-bold px-2 py-0.5 rounded-full uppercase">
-                      Redirect: {page.redirectTime}s
-                    </span>
-                  </div>
-                </div>
-              </div>
+        <div className="w-full overflow-x-auto bg-white border border-zinc-200/80 rounded-2xl shadow-sm">
+          <table className="w-full text-left border-collapse">
+            <thead>
+              <tr className="border-b border-zinc-100 text-[10px] font-black uppercase text-zinc-400 tracking-wider">
+                <th className="px-6 py-4">Title / Matchup</th>
+                <th className="px-6 py-4">Category</th>
+                <th className="px-6 py-4">Subcategory</th>
+                <th className="px-6 py-4">Link Address</th>
+                <th className="px-6 py-4 text-right">Actions</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-zinc-100">
+              {pages.map((page) => {
+                const displayLink = `/${page.slug}`
+                
+                return (
+                  <tr key={page.id} className="hover:bg-zinc-50/50 transition-colors">
+                    {/* TITLE / MATCHUP */}
+                    <td className="px-6 py-4">
+                      <div className="flex flex-col gap-0.5 text-left">
+                        <div className="flex items-center gap-2">
+                          <span className="font-extrabold text-sm text-zinc-800 hover:text-[#006f53] transition-colors">
+                            {page.title}
+                          </span>
+                          <span className="text-[9px] font-extrabold px-1.5 py-0.5 rounded-full border border-cyan-100 bg-cyan-50 text-cyan-600 uppercase tracking-wider">
+                            Upcoming
+                          </span>
+                        </div>
+                        <span className="text-[10px] text-zinc-400 font-semibold lowercase">
+                          slug: {page.slug}
+                        </span>
+                        <span className="text-[10px] text-zinc-400 font-medium mt-1 flex items-center gap-1">
+                          📅 {new Date(page.createdAt).toLocaleString()}
+                        </span>
+                      </div>
+                    </td>
 
-              {/* Right Action buttons */}
-              <div className="flex items-center gap-1 shrink-0 ml-4">
-                {/* Copy Link Button */}
-                <button
-                  onClick={() => handleCopyLink(page.slug, page.id)}
-                  title="Copy Page Link"
-                  className="p-2 rounded-lg bg-zinc-50 border border-zinc-200/60 hover:bg-zinc-100 text-zinc-500 hover:text-zinc-800 cursor-pointer transition-colors shadow-sm"
-                >
-                  {copiedId === page.id ? (
-                    <Check className="size-3.5 text-emerald-500 stroke-[2.5px]" />
-                  ) : (
-                    <Copy className="size-3.5" />
-                  )}
-                </button>
+                    {/* CATEGORY (SOCCER / REDIRECT TIME) */}
+                    <td className="px-6 py-4 vertical-align-middle">
+                      <span className="text-[9px] bg-zinc-50 border border-zinc-200/80 text-zinc-600 font-extrabold px-2 py-0.5 rounded uppercase tracking-wider">
+                        {page.redirectTime}s Redirect
+                      </span>
+                    </td>
 
-                {/* Edit Button */}
-                <button
-                  onClick={() => handleOpenEdit(page)}
-                  title="Edit Page"
-                  className="p-2 rounded-lg bg-zinc-50 border border-zinc-200/60 hover:bg-zinc-100 text-zinc-500 hover:text-zinc-800 cursor-pointer transition-colors shadow-sm"
-                >
-                  <Pencil className="size-3.5" />
-                </button>
+                    {/* SUBCATEGORY (MODAL SCRIPT DETAILS) */}
+                    <td className="px-6 py-4 vertical-align-middle">
+                      {page.modalImage ? (
+                        <span className="text-[9px] bg-indigo-50 border border-indigo-100 text-indigo-600 font-extrabold px-2 py-0.5 rounded uppercase tracking-wider">
+                          Has Modal
+                        </span>
+                      ) : (
+                        <span className="text-[9px] bg-zinc-50 border border-zinc-200/80 text-zinc-400 font-extrabold px-2 py-0.5 rounded uppercase tracking-wider">
+                          None
+                        </span>
+                      )}
+                    </td>
 
-                {/* Delete Button */}
-                <button
-                  onClick={() => handleOpenDelete(page.id, page.title)}
-                  title="Delete Page"
-                  className="p-2 rounded-lg bg-red-50 border border-red-100 hover:bg-red-100 text-red-500 cursor-pointer transition-colors shadow-sm"
-                >
-                  <Trash2 className="size-3.5" />
-                </button>
-              </div>
-            </div>
-          ))}
+                    {/* LINK ADDRESS */}
+                    <td className="px-6 py-4 vertical-align-middle text-xs">
+                      <a
+                        href={displayLink}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-sky-500 hover:underline font-bold transition-all"
+                      >
+                        {displayLink}
+                      </a>
+                    </td>
+
+                    {/* ACTIONS */}
+                    <td className="px-6 py-4 vertical-align-middle text-right">
+                      <div className="flex items-center justify-end gap-2">
+                        {/* Copy Link Button */}
+                        <button
+                          onClick={() => handleCopyLink(page.slug, page.id)}
+                          title="Copy Link"
+                          className="h-8 px-3 rounded-lg border border-teal-200 hover:bg-teal-50 text-teal-600 hover:text-teal-800 font-bold text-xs flex items-center gap-1.5 transition-all cursor-pointer shadow-sm"
+                        >
+                          {copiedId === page.id ? (
+                            <>
+                              <Check className="size-3.5 stroke-[2.5px]" />
+                              Copied
+                            </>
+                          ) : (
+                            <>
+                              <Copy className="size-3.5" />
+                              Copy
+                            </>
+                          )}
+                        </button>
+
+                        {/* Edit Button */}
+                        <button
+                          onClick={() => handleOpenEdit(page)}
+                          title="Edit Page"
+                          className="p-1.5 rounded-lg border border-zinc-200/60 hover:bg-zinc-50 text-zinc-500 hover:text-zinc-800 transition-all cursor-pointer shadow-sm"
+                        >
+                          <Pencil className="size-4" />
+                        </button>
+
+                        {/* Delete Button */}
+                        <button
+                          onClick={() => handleOpenDelete(page.id, page.title)}
+                          title="Delete Page"
+                          className="p-1.5 rounded-lg border border-red-100 hover:bg-red-50 text-red-500 hover:text-red-700 transition-all cursor-pointer shadow-sm"
+                        >
+                          <Trash2 className="size-4" />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                )
+              })}
+            </tbody>
+          </table>
         </div>
       )}
 
@@ -541,14 +636,52 @@ export default function AdminPage() {
             {/* Split layout: Modal details */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="flex flex-col gap-1.5">
-                <label className="text-[10px] font-black uppercase text-zinc-400 tracking-wider">Modal Image URL</label>
-                <Input
-                  type="url"
-                  placeholder="https://example.com/banner.png"
-                  value={modalImage}
-                  onChange={(e) => setModalImage(e.target.value)}
-                  className="h-10 border border-zinc-200 focus-visible:border-[#006f53] focus-visible:ring-[#006f53]/10 text-xs rounded-lg"
-                />
+                <label className="text-[10px] font-black uppercase text-zinc-400 tracking-wider">Modal Image</label>
+                <div className="flex gap-2">
+                  <div className="relative flex-1">
+                    <Input
+                      type="text"
+                      placeholder="https://example.com/banner.png or upload"
+                      value={modalImage}
+                      onChange={(e) => setModalImage(e.target.value)}
+                      className="h-10 border border-zinc-200 focus-visible:border-[#006f53] focus-visible:ring-[#006f53]/10 text-xs rounded-lg w-full pr-10"
+                    />
+                    {modalImage && (
+                      <button
+                        type="button"
+                        onClick={() => setModalImage("")}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-red-500 text-xs font-bold cursor-pointer"
+                        title="Clear image"
+                      >
+                        ✕
+                      </button>
+                    )}
+                  </div>
+                  <label className="flex items-center justify-center px-4 h-10 border border-zinc-200 hover:border-[#006f53]/50 hover:bg-zinc-50 text-zinc-600 rounded-lg text-xs font-bold cursor-pointer transition-all shrink-0 select-none">
+                    {isUploading ? (
+                      <Loader2 className="size-4 animate-spin text-[#006f53]" />
+                    ) : (
+                      "Upload"
+                    )}
+                    <input
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      disabled={isUploading}
+                      onChange={handleImageUpload}
+                    />
+                  </label>
+                </div>
+                {modalImage && (
+                  <div className="mt-1 relative aspect-video w-full max-w-[200px] rounded-lg overflow-hidden border border-zinc-200 bg-zinc-50 flex items-center justify-center">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={resolveImageUrl(modalImage)}
+                      alt="Modal image preview"
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                )}
               </div>
 
               <div className="flex flex-col gap-1.5">
