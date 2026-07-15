@@ -3,6 +3,7 @@
 import * as React from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import Link from "next/link"
 import {
   Search,
   Play,
@@ -24,7 +25,8 @@ import {
   ChevronRight,
   ShieldCheck,
   Zap,
-  Globe
+  Globe,
+  User
 } from "lucide-react"
 
 interface Movie {
@@ -115,6 +117,36 @@ export default function Page() {
   const [isFullScreen, setIsFullScreen] = React.useState(false)
   const [showControls, setShowControls] = React.useState(true)
   const [adClicked, setAdClicked] = React.useState(false)
+  const [user, setUser] = React.useState<{ id: number; email: string; role: string } | null>(null)
+
+  // Check auth state on mount
+  React.useEffect(() => {
+    const checkAuth = async () => {
+      try {
+        const res = await fetch("/api/auth/me")
+        if (res.ok) {
+          const data = await res.json()
+          if (data.success) {
+            setUser(data.user)
+          }
+        }
+      } catch (err) {
+        console.error("Auth check failed:", err)
+      }
+    }
+    checkAuth()
+  }, [])
+
+  const handleLogout = async () => {
+    try {
+      const res = await fetch("/api/auth/logout", { method: "POST" })
+      if (res.ok) {
+        setUser(null)
+      }
+    } catch (err) {
+      console.error("Logout failed:", err)
+    }
+  }
 
   // Auto-hide controls in playing mode
   React.useEffect(() => {
@@ -225,6 +257,34 @@ export default function Page() {
         backgroundImage: "radial-gradient(circle at center, #2e0909 0%, #070202 100%)"
       }}
     >
+      {/* Top Bar for Auth */}
+      {!isFullScreen && (
+        <div className="absolute top-6 right-6 z-40 flex items-center gap-4">
+          {user ? (
+            <div className="flex items-center gap-3 bg-black/60 border border-zinc-800/80 rounded-full px-4 py-1.5 shadow-xl backdrop-blur-md">
+              <div className="size-2 rounded-full bg-emerald-500 animate-pulse" />
+              <span className="text-xs font-semibold text-zinc-300">
+                {user.email}
+              </span>
+              <button
+                onClick={handleLogout}
+                className="text-[10px] uppercase tracking-wider font-extrabold text-zinc-500 hover:text-red-400 transition-colors border-l border-zinc-800 pl-3 cursor-pointer outline-none"
+              >
+                Sign Out
+              </button>
+            </div>
+          ) : (
+            <Link
+              href="/login"
+              className="flex items-center gap-2 bg-black/60 border border-zinc-800/80 hover:border-red-500/30 hover:bg-zinc-950/80 rounded-full px-4 py-1.5 shadow-xl backdrop-blur-md text-xs font-bold text-zinc-300 hover:text-white transition-all hover:scale-105 active:scale-95"
+            >
+              <User className="size-3.5" />
+              Sign In
+            </Link>
+          )}
+        </div>
+      )}
+
       {/* Dynamic Background Glows */}
       <div className="absolute top-1/4 left-1/4 -z-10 h-72 w-72 rounded-full bg-red-600/10 blur-[120px] pointer-events-none" />
       <div className="absolute bottom-1/4 right-1/4 -z-10 h-80 w-80 rounded-full bg-orange-600/5 blur-[120px] pointer-events-none" />
