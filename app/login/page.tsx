@@ -41,7 +41,7 @@ export default function LoginPage() {
 
       setSuccess(true)
       setTimeout(() => {
-        router.push("/")
+        router.push("/admin")
         router.refresh()
       }, 800)
     } catch (err: any) {

@@ -266,6 +266,12 @@ export default function Page() {
               <span className="text-xs font-semibold text-zinc-300">
                 {user.email}
               </span>
+              <Link
+                href="/admin"
+                className="text-[10px] uppercase tracking-wider font-extrabold text-zinc-400 hover:text-emerald-400 transition-colors border-l border-zinc-800 pl-3 cursor-pointer outline-none"
+              >
+                Dashboard
+              </Link>
               <button
                 onClick={handleLogout}
                 className="text-[10px] uppercase tracking-wider font-extrabold text-zinc-500 hover:text-red-400 transition-colors border-l border-zinc-800 pl-3 cursor-pointer outline-none"
