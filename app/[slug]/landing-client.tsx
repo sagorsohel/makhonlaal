@@ -495,7 +495,6 @@ export default function LandingPageClient({ pageData }: ClientProps) {
                       </div>
                       <div className="flex items-center gap-4">
                         <button className="p-1 rounded text-zinc-300 hover:text-white transition-colors cursor-pointer"><Settings className="size-4" /></button>
-                        <button className="p-1 rounded text-zinc-300 hover:text-white transition-colors cursor-pointer" onClick={() => setIsFullScreen(!isFullScreen)}><Maximize2 className="size-4" /></button>
                       </div>
                     </div>
                   </div>
@@ -565,9 +564,7 @@ export default function LandingPageClient({ pageData }: ClientProps) {
         </Button>
 
         <Button
-          onClick={() => {
-            setIsFullScreen(!isFullScreen)
-          }}
+          onClick={handlePlayClick}
           className="w-full sm:w-auto h-12 rounded-2xl bg-zinc-800/80 hover:bg-zinc-700 text-zinc-200 hover:text-white font-extrabold text-sm uppercase tracking-widest px-8 border border-zinc-700/60 shadow-xl backdrop-blur-sm transition-all duration-300 hover:scale-105 active:scale-95 cursor-pointer flex items-center justify-center gap-2"
         >
           <Monitor className="size-4" />
