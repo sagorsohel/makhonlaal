@@ -185,17 +185,7 @@ export default function LandingPageClient({ pageData }: ClientProps) {
         backgroundImage: "radial-gradient(circle at center, #2e0909 0%, #070202 100%)"
       }}
     >
-      {/* Top Bar for Auth (Back Link to Admin/Home) */}
-      {!isFullScreen && (
-        <div className="absolute top-6 right-6 z-40 flex items-center gap-4">
-          <Link
-            href="/"
-            className="flex items-center gap-2 bg-black/60 border border-zinc-800/80 hover:border-red-500/30 hover:bg-zinc-950/80 rounded-full px-4 py-1.5 shadow-xl backdrop-blur-md text-xs font-bold text-zinc-300 hover:text-white transition-all hover:scale-105 active:scale-95 cursor-pointer"
-          >
-            Home Portal
-          </Link>
-        </div>
-      )}
+
 
       {/* Dynamic Background Glows */}
       <div className="absolute top-1/4 left-1/4 -z-10 h-72 w-72 rounded-full bg-red-600/10 blur-[120px] pointer-events-none" />
