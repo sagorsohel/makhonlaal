@@ -744,7 +744,7 @@ export default function AdminPage() {
               </div>
             </div>
 
-            <DialogFooter className="mt-4">
+            <DialogFooter className="mt-4 bg-white">
               <DialogClose>
                 <Button type="button" variant="outline" className="h-10 rounded-xl cursor-pointer">
                   Cancel
