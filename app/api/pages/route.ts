@@ -98,6 +98,7 @@ export async function POST(request: Request) {
       redirectTime,
       redirectUrl,
       footerAdsScript,
+      playerAdsScript,
     } = body
 
     if (!title || !slug) {
@@ -137,6 +138,7 @@ export async function POST(request: Request) {
       redirectTime: redirectTime !== undefined ? Number(redirectTime) : 5,
       redirectUrl: redirectUrl || null,
       footerAdsScript: footerAdsScript || null,
+      playerAdsScript: playerAdsScript || null,
     })
 
     return NextResponse.json({

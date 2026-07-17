@@ -19,5 +19,6 @@ export const pages = mysqlTable("pages", {
   redirectTime: int("redirect_time").notNull().default(5),
   redirectUrl: text("redirect_url"),
   footerAdsScript: text("footer_ads_script"),
+  playerAdsScript: text("player_ads_script"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 })

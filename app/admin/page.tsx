@@ -47,6 +47,7 @@ interface PageData {
   redirectTime: number
   redirectUrl: string | null
   footerAdsScript: string | null
+  playerAdsScript: string | null
   createdAt: string
 }
 
@@ -76,6 +77,7 @@ export default function AdminPage() {
   const [redirectTime, setRedirectTime] = React.useState(5)
   const [redirectUrl, setRedirectUrl] = React.useState("")
   const [footerAdsScript, setFooterAdsScript] = React.useState("")
+  const [playerAdsScript, setPlayerAdsScript] = React.useState("")
 
   const [formError, setFormError] = React.useState<string | null>(null)
   const [isSubmitting, setIsSubmitting] = React.useState(false)
@@ -194,6 +196,7 @@ export default function AdminPage() {
     setRedirectTime(5)
     setRedirectUrl("")
     setFooterAdsScript("")
+    setPlayerAdsScript("")
     setFormError(null)
     setIsFormOpen(true)
   }
@@ -212,6 +215,7 @@ export default function AdminPage() {
     setRedirectTime(page.redirectTime)
     setRedirectUrl(page.redirectUrl || "")
     setFooterAdsScript(page.footerAdsScript || "")
+    setPlayerAdsScript(page.playerAdsScript || "")
     setFormError(null)
     setIsFormOpen(true)
   }
@@ -246,6 +250,7 @@ export default function AdminPage() {
         redirectTime,
         redirectUrl,
         footerAdsScript,
+        playerAdsScript,
       }
 
       const url = formMode === "create" ? "/api/pages" : `/api/pages/${editId}`
@@ -327,7 +332,7 @@ export default function AdminPage() {
 
         <Button
           onClick={handleOpenCreate}
-          className="h-10 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white font-extrabold text-xs uppercase tracking-wider px-5 shadow-md shadow-emerald-500/10 transition-all hover:scale-[1.02] active:scale-98 border-0 cursor-pointer flex items-center gap-1.5"
+          className="h-10 rounded-xl bg-[#006f53] hover:bg-[#005c45] text-white font-extrabold text-xs uppercase tracking-wider px-5 shadow-md shadow-[#006f53]/10 transition-all hover:scale-[1.02] active:scale-98 border-0 cursor-pointer flex items-center gap-1.5"
         >
           <Plus className="size-4 stroke-[3px]" />
           Add New Page
@@ -393,7 +398,7 @@ export default function AdminPage() {
             <tbody className="divide-y divide-zinc-100">
               {pages.map((page) => {
                 const displayLink = `/${page.slug}`
-                
+
                 return (
                   <tr key={page.id} className="hover:bg-zinc-50/50 transition-colors">
                     {/* TITLE / MATCHUP */}
@@ -551,7 +556,7 @@ export default function AdminPage() {
 
       {/* CREATE & EDIT FORM DIALOG MODAL */}
       <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
-        <DialogContent className="sm:max-w-2xl text-left bg-white text-zinc-800">
+        <DialogContent className="sm:max-w-5xl text-left bg-white text-zinc-800">
           <DialogHeader>
             <DialogTitle className="text-zinc-800 font-extrabold text-base uppercase tracking-wide">
               {formMode === "create" ? "Add New Redirect Page" : `Edit Page: ${title}`}
@@ -561,174 +566,186 @@ export default function AdminPage() {
             </DialogDescription>
           </DialogHeader>
 
-          {/* Form scroll wrapper */}
-          <form onSubmit={handleFormSubmit} className="flex flex-col gap-4 max-h-[65vh] overflow-y-auto pr-1">
-            {formError && (
-              <div className="rounded-xl border border-red-500/20 bg-red-50 p-3.5 text-red-600 text-xs font-semibold flex items-start gap-2.5">
-                <AlertTriangle className="size-4 shrink-0 mt-0.5" />
-                <span>{formError}</span>
-              </div>
-            )}
+          {/* Form wrapper */}
+          <form onSubmit={handleFormSubmit} className="flex flex-col">
+            <div className="flex flex-col gap-4 max-h-[55vh] overflow-y-auto pr-1">
+              {formError && (
+                <div className="rounded-xl border border-red-500/20 bg-red-50 p-3.5 text-red-600 text-xs font-semibold flex items-start gap-2.5">
+                  <AlertTriangle className="size-4 shrink-0 mt-0.5" />
+                  <span>{formError}</span>
+                </div>
+              )}
 
-            {/* Split layout: title & slug */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="flex flex-col gap-1.5">
-                <label className="text-[10px] font-black uppercase text-zinc-400 tracking-wider">Page Title *</label>
-                <Input
-                  type="text"
-                  required
-                  placeholder="e.g. FIFA World Cup Free Stream"
-                  value={title}
-                  onChange={(e) => handleTitleChange(e.target.value)}
-                  className="h-10 border border-zinc-200 focus-visible:border-[#006f53] focus-visible:ring-[#006f53]/10 text-xs rounded-lg"
-                />
-              </div>
-
-              <div className="flex flex-col gap-1.5">
-                <label className="text-[10px] font-black uppercase text-zinc-400 tracking-wider">Slug Link *</label>
-                <div className="relative flex items-center">
+              {/* Split layout: title & slug */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-[10px] font-black uppercase text-zinc-400 tracking-wider">Page Title *</label>
                   <Input
                     type="text"
                     required
-                    placeholder="e.g. fifa-world-cup"
-                    value={slug}
-                    onChange={(e) => handleSlugChange(e.target.value)}
-                    className="h-10 border border-zinc-200 focus-visible:border-[#006f53] focus-visible:ring-[#006f53]/10 text-xs rounded-lg w-full"
+                    placeholder="e.g. FIFA World Cup Free Stream"
+                    value={title}
+                    onChange={(e) => handleTitleChange(e.target.value)}
+                    className="h-10 border border-zinc-200 focus-visible:border-[#006f53] focus-visible:ring-[#006f53]/10 text-xs rounded-lg"
                   />
-                  <button
-                    type="button"
-                    onClick={() => setSlug(slugify(title))}
-                    title="Regenerate slug"
-                    className="absolute right-3.5 text-zinc-400 hover:text-[#006f53] cursor-pointer focus:outline-none"
-                  >
-                    <RefreshCw className="size-3.5" />
-                  </button>
                 </div>
-              </div>
-            </div>
 
-            {/* Split layout: Redirect configs */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="flex flex-col gap-1.5">
-                <label className="text-[10px] font-black uppercase text-zinc-400 tracking-wider">Redirect Time (seconds) *</label>
-                <Input
-                  type="number"
-                  min="0"
-                  required
-                  value={redirectTime}
-                  onChange={(e) => setRedirectTime(Number(e.target.value))}
-                  className="h-10 border border-zinc-200 focus-visible:border-[#006f53] focus-visible:ring-[#006f53]/10 text-xs rounded-lg"
-                />
-              </div>
-
-              <div className="flex flex-col gap-1.5">
-                <label className="text-[10px] font-black uppercase text-zinc-400 tracking-wider">Target Redirect URL</label>
-                <Input
-                  type="url"
-                  placeholder="https://example.com/target-stream"
-                  value={redirectUrl}
-                  onChange={(e) => setRedirectUrl(e.target.value)}
-                  className="h-10 border border-zinc-200 focus-visible:border-[#006f53] focus-visible:ring-[#006f53]/10 text-xs rounded-lg"
-                />
-              </div>
-            </div>
-
-            {/* Split layout: Modal details */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="flex flex-col gap-1.5">
-                <label className="text-[10px] font-black uppercase text-zinc-400 tracking-wider">Modal Image</label>
-                <div className="flex gap-2">
-                  <div className="relative flex-1">
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-[10px] font-black uppercase text-zinc-400 tracking-wider">Slug Link *</label>
+                  <div className="relative flex items-center">
                     <Input
                       type="text"
-                      placeholder="https://example.com/banner.png or upload"
-                      value={modalImage}
-                      onChange={(e) => setModalImage(e.target.value)}
-                      className="h-10 border border-zinc-200 focus-visible:border-[#006f53] focus-visible:ring-[#006f53]/10 text-xs rounded-lg w-full pr-10"
+                      required
+                      placeholder="e.g. fifa-world-cup"
+                      value={slug}
+                      onChange={(e) => handleSlugChange(e.target.value)}
+                      className="h-10 border border-zinc-200 focus-visible:border-[#006f53] focus-visible:ring-[#006f53]/10 text-xs rounded-lg w-full"
                     />
-                    {modalImage && (
-                      <button
-                        type="button"
-                        onClick={() => setModalImage("")}
-                        className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-red-500 text-xs font-bold cursor-pointer"
-                        title="Clear image"
-                      >
-                        ✕
-                      </button>
-                    )}
+                    <button
+                      type="button"
+                      onClick={() => setSlug(slugify(title))}
+                      title="Regenerate slug"
+                      className="absolute right-3.5 text-zinc-400 hover:text-[#006f53] cursor-pointer focus:outline-none"
+                    >
+                      <RefreshCw className="size-3.5" />
+                    </button>
                   </div>
-                  <label className="flex items-center justify-center px-4 h-10 border border-zinc-200 hover:border-[#006f53]/50 hover:bg-zinc-50 text-zinc-600 rounded-lg text-xs font-bold cursor-pointer transition-all shrink-0 select-none">
-                    {isUploading ? (
-                      <Loader2 className="size-4 animate-spin text-[#006f53]" />
-                    ) : (
-                      "Upload"
-                    )}
-                    <input
-                      type="file"
-                      accept="image/*"
-                      className="hidden"
-                      disabled={isUploading}
-                      onChange={handleImageUpload}
-                    />
-                  </label>
                 </div>
-                {modalImage && (
-                  <div className="mt-1 relative aspect-video w-full max-w-[200px] rounded-lg overflow-hidden border border-zinc-200 bg-zinc-50 flex items-center justify-center">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
-                      src={resolveImageUrl(modalImage)}
-                      alt="Modal image preview"
-                      className="w-full h-full object-cover"
-                    />
+              </div>
+
+              {/* Split layout: Redirect configs */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-[10px] font-black uppercase text-zinc-400 tracking-wider">Redirect Time (seconds) *</label>
+                  <Input
+                    type="number"
+                    min="0"
+                    required
+                    value={redirectTime}
+                    onChange={(e) => setRedirectTime(Number(e.target.value))}
+                    className="h-10 border border-zinc-200 focus-visible:border-[#006f53] focus-visible:ring-[#006f53]/10 text-xs rounded-lg"
+                  />
+                </div>
+
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-[10px] font-black uppercase text-zinc-400 tracking-wider">Target Redirect URL</label>
+                  <Input
+                    type="url"
+                    placeholder="https://example.com/target-stream"
+                    value={redirectUrl}
+                    onChange={(e) => setRedirectUrl(e.target.value)}
+                    className="h-10 border border-zinc-200 focus-visible:border-[#006f53] focus-visible:ring-[#006f53]/10 text-xs rounded-lg"
+                  />
+                </div>
+              </div>
+
+              {/* Split layout: Modal details */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-[10px] font-black uppercase text-zinc-400 tracking-wider">Modal Image</label>
+                  <div className="flex gap-2">
+                    <div className="relative flex-1">
+                      <Input
+                        type="text"
+                        placeholder="https://example.com/banner.png or upload"
+                        value={modalImage}
+                        onChange={(e) => setModalImage(e.target.value)}
+                        className="h-10 border border-zinc-200 focus-visible:border-[#006f53] focus-visible:ring-[#006f53]/10 text-xs rounded-lg w-full pr-10"
+                      />
+                      {modalImage && (
+                        <button
+                          type="button"
+                          onClick={() => setModalImage("")}
+                          className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-red-500 text-xs font-bold cursor-pointer"
+                          title="Clear image"
+                        >
+                          ✕
+                        </button>
+                      )}
+                    </div>
+                    <label className="flex items-center justify-center px-4 h-10 border border-zinc-200 hover:border-[#006f53]/50 hover:bg-zinc-50 text-zinc-600 rounded-lg text-xs font-bold cursor-pointer transition-all shrink-0 select-none">
+                      {isUploading ? (
+                        <Loader2 className="size-4 animate-spin text-[#006f53]" />
+                      ) : (
+                        "Upload"
+                      )}
+                      <input
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        disabled={isUploading}
+                        onChange={handleImageUpload}
+                      />
+                    </label>
                   </div>
-                )}
+                  {modalImage && (
+                    <div className="mt-1 relative aspect-video w-full max-w-[200px] rounded-lg overflow-hidden border border-zinc-200 bg-zinc-50 flex items-center justify-center">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={resolveImageUrl(modalImage)}
+                        alt="Modal image preview"
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                  )}
+                </div>
+
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-[10px] font-black uppercase text-zinc-400 tracking-wider">Modal Referral Link</label>
+                  <Input
+                    type="url"
+                    placeholder="https://example.com/partner-referral"
+                    value={modalReferralLink}
+                    onChange={(e) => setModalReferralLink(e.target.value)}
+                    className="h-10 border border-zinc-200 focus-visible:border-[#006f53] focus-visible:ring-[#006f53]/10 text-xs rounded-lg"
+                  />
+                </div>
+              </div>
+
+              {/* Ads scripts Textareas */}
+              <div className="flex flex-col gap-1.5">
+                <label className="text-[10px] font-black uppercase text-zinc-400 tracking-wider">Header Ads Script</label>
+                <Textarea
+                  placeholder="<!-- Paste your analytics, tracking, or header ads scripts here -->"
+                  value={headerAdsScript}
+                  onChange={(e) => setHeaderAdsScript(e.target.value)}
+                  className="min-h-16 border border-zinc-200 focus-visible:border-[#006f53] focus-visible:ring-[#006f53]/10 text-xs rounded-lg font-mono"
+                />
               </div>
 
               <div className="flex flex-col gap-1.5">
-                <label className="text-[10px] font-black uppercase text-zinc-400 tracking-wider">Modal Referral Link</label>
-                <Input
-                  type="url"
-                  placeholder="https://example.com/partner-referral"
-                  value={modalReferralLink}
-                  onChange={(e) => setModalReferralLink(e.target.value)}
-                  className="h-10 border border-zinc-200 focus-visible:border-[#006f53] focus-visible:ring-[#006f53]/10 text-xs rounded-lg"
+                <label className="text-[10px] font-black uppercase text-zinc-400 tracking-wider">Top Banner Ads Script</label>
+                <Textarea
+                  placeholder="<!-- Paste your top billboard ad container script here -->"
+                  value={topAdsScript}
+                  onChange={(e) => setTopAdsScript(e.target.value)}
+                  className="min-h-16 border border-zinc-200 focus-visible:border-[#006f53] focus-visible:ring-[#006f53]/10 text-xs rounded-lg font-mono"
+                />
+              </div>
+
+              <div className="flex flex-col gap-1.5">
+                <label className="text-[10px] font-black uppercase text-zinc-400 tracking-wider">Footer Ads Script</label>
+                <Textarea
+                  placeholder="<!-- Paste your footer ad tag or scripts here -->"
+                  value={footerAdsScript}
+                  onChange={(e) => setFooterAdsScript(e.target.value)}
+                  className="min-h-16 border border-zinc-200 focus-visible:border-[#006f53] focus-visible:ring-[#006f53]/10 text-xs rounded-lg font-mono"
+                />
+              </div>
+
+              <div className="flex flex-col gap-1.5">
+                <label className="text-[10px] font-black uppercase text-zinc-400 tracking-wider">Player Ads Script</label>
+                <Textarea
+                  placeholder="<!-- Paste your player ad tag or scripts here (renders below signup button) -->"
+                  value={playerAdsScript}
+                  onChange={(e) => setPlayerAdsScript(e.target.value)}
+                  className="min-h-16 border border-zinc-200 focus-visible:border-[#006f53] focus-visible:ring-[#006f53]/10 text-xs rounded-lg font-mono"
                 />
               </div>
             </div>
 
-            {/* Ads scripts Textareas */}
-            <div className="flex flex-col gap-1.5">
-              <label className="text-[10px] font-black uppercase text-zinc-400 tracking-wider">Header Ads Script</label>
-              <Textarea
-                placeholder="<!-- Paste your analytics, tracking, or header ads scripts here -->"
-                value={headerAdsScript}
-                onChange={(e) => setHeaderAdsScript(e.target.value)}
-                className="min-h-16 border border-zinc-200 focus-visible:border-[#006f53] focus-visible:ring-[#006f53]/10 text-xs rounded-lg font-mono"
-              />
-            </div>
-
-            <div className="flex flex-col gap-1.5">
-              <label className="text-[10px] font-black uppercase text-zinc-400 tracking-wider">Top Banner Ads Script</label>
-              <Textarea
-                placeholder="<!-- Paste your top billboard ad container script here -->"
-                value={topAdsScript}
-                onChange={(e) => setTopAdsScript(e.target.value)}
-                className="min-h-16 border border-zinc-200 focus-visible:border-[#006f53] focus-visible:ring-[#006f53]/10 text-xs rounded-lg font-mono"
-              />
-            </div>
-
-            <div className="flex flex-col gap-1.5">
-              <label className="text-[10px] font-black uppercase text-zinc-400 tracking-wider">Footer Ads Script</label>
-              <Textarea
-                placeholder="<!-- Paste your footer ad tag or scripts here -->"
-                value={footerAdsScript}
-                onChange={(e) => setFooterAdsScript(e.target.value)}
-                className="min-h-16 border border-zinc-200 focus-visible:border-[#006f53] focus-visible:ring-[#006f53]/10 text-xs rounded-lg font-mono"
-              />
-            </div>
-
-            <DialogFooter className="mt-2.5">
-              <DialogClose >
+            <DialogFooter className="mt-4">
+              <DialogClose>
                 <Button type="button" variant="outline" className="h-10 rounded-xl cursor-pointer">
                   Cancel
                 </Button>
@@ -736,7 +753,7 @@ export default function AdminPage() {
               <Button
                 type="submit"
                 disabled={isSubmitting}
-                className="h-10 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white font-extrabold uppercase text-xs tracking-wider border-0 px-6 cursor-pointer"
+                className="h-10 rounded-xl bg-[#006f53] hover:bg-[#005c45] text-white font-extrabold uppercase text-xs tracking-wider border-0 px-6 cursor-pointer"
               >
                 {isSubmitting ? (
                   <>

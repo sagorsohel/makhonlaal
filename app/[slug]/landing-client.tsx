@@ -98,6 +98,7 @@ interface ClientProps {
     redirectTime: number
     redirectUrl: string | null
     footerAdsScript: string | null
+    playerAdsScript: string | null
   }
 }
 
@@ -372,6 +373,13 @@ export default function LandingPageClient({ pageData }: ClientProps) {
                     >
                       Sign Up and Watch Now!
                     </button>
+
+                    {/* Player Ads Script */}
+                    {pageData.playerAdsScript && (
+                      <div className="w-full flex justify-center items-center shrink-0 my-1">
+                        <AdScriptLoader html={pageData.playerAdsScript} />
+                      </div>
+                    )}
 
                     {/* Dynamic modal image or script banner if configured */}
                     {pageData.modalImage && (
