@@ -16,7 +16,6 @@ import {
   X,
   Info,
   ShieldCheck,
-  Zap,
   Globe,
   Film,
   Search,
@@ -104,7 +103,7 @@ interface ClientProps {
 
 export default function LandingPageClient({ pageData }: ClientProps) {
   const [seconds, setSeconds] = React.useState(pageData.redirectTime)
-  const [isModalOpen, setIsModalOpen] = React.useState(false)
+  const [showInlineSignup, setShowInlineSignup] = React.useState(false)
 
   // Player Interactive States
   const [isPlaying, setIsPlaying] = React.useState(false)
@@ -137,14 +136,11 @@ export default function LandingPageClient({ pageData }: ClientProps) {
   }, [seconds, pageData.redirectUrl, pageData.redirectTime])
 
   const handlePlayClick = () => {
-    if (pageData.modalReferralLink) {
-      setIsModalOpen(true)
-    } else {
-      setIsPlaying(true)
-      setTimeout(() => {
-        handleProceedManual()
-      }, 500)
-    }
+    setIsPlaying(true)
+    setShowInlineSignup(false)
+    setTimeout(() => {
+      setShowInlineSignup(true)
+    }, 2000)
   }
 
   // Auto-hide controls in playing mode
@@ -160,15 +156,13 @@ export default function LandingPageClient({ pageData }: ClientProps) {
 
   const handleModalClick = () => {
     if (pageData.modalReferralLink) {
-      window.open(pageData.modalReferralLink, "_blank")
+      window.open(pageData.modalReferralLink, "_blank", "noopener,noreferrer")
+    } else if (pageData.redirectUrl) {
+      window.open(pageData.redirectUrl, "_blank", "noopener,noreferrer")
     }
   }
 
-  const handleProceedManual = () => {
-    if (pageData.redirectUrl) {
-      window.location.href = pageData.redirectUrl
-    }
-  }
+
 
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault()
@@ -330,140 +324,185 @@ export default function LandingPageClient({ pageData }: ClientProps) {
                 backgroundImage: `radial-gradient(circle at center, #1b0707 0%, #060202 100%)`
               }}
             >
-              {/* Shifting Gradient Colors (simulating movie projection screen reflection) */}
-              <div className="absolute inset-0 bg-gradient-to-tr from-amber-600 via-red-700 to-zinc-900 opacity-20 blur-3xl pointer-events-none animate-pulse duration-[6000ms]" />
+              {showInlineSignup ? (
+                /* INLINE SIGNUP CONTENT */
+                <div className="absolute inset-0 bg-zinc-950/95 p-5 flex flex-col justify-between select-none z-30">
+                  {/* Background image overlay inside player */}
+                  {pageData.modalImage && (
+                    <div className="absolute inset-0 select-none pointer-events-none z-0">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={resolveImageUrl(pageData.modalImage)}
+                        alt=""
+                        className="w-full h-full object-cover opacity-15"
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-zinc-950 via-zinc-950/90 to-zinc-950/40" />
+                    </div>
+                  )}
 
-              {/* Glowing Ambient light bar on the top edge */}
-              <div className="absolute top-0 left-10 right-10 h-0.5 bg-gradient-to-r from-transparent via-red-500/50 to-transparent blur-[2px]" />
-
-              {/* Top Bar Overlay */}
-              <div className={`absolute top-0 left-0 right-0 p-6 flex items-start justify-between bg-gradient-to-b from-black/85 via-black/40 to-transparent transition-opacity duration-300 ${showControls ? "opacity-100" : "opacity-0 pointer-events-none"
-                }`}>
-                <div className="flex items-center gap-3">
-                  <div className="flex items-center justify-center p-2 rounded-xl bg-red-600/10 border border-red-500/20 text-red-500 shadow-inner">
-                    <Film className="size-4" />
-                  </div>
-                  <div>
-                    <h3 className="font-extrabold text-sm md:text-base tracking-wide text-zinc-100 flex items-center gap-2">
-                      {pageData.title}
-                      <span className="text-[10px] bg-red-600 text-white font-bold px-1.5 py-0.2 rounded uppercase">
-                        4K UHD
+                  {/* Header */}
+                  <div className="flex items-center justify-between border-b border-zinc-800/80 pb-2 relative z-10">
+                    <div className="flex items-center gap-2 text-orange-500">
+                      <Tv className="size-4 stroke-[2.5px]" />
+                      <span className="font-extrabold text-[10px] sm:text-xs uppercase tracking-wider text-zinc-100 truncate max-w-[200px] sm:max-w-xs">
+                        {pageData.title}
                       </span>
+                    </div>
+                    <button
+                      onClick={() => {
+                        setIsPlaying(false)
+                        setShowInlineSignup(false)
+                      }}
+                      className="p-1 rounded-md text-zinc-400 hover:text-white transition-colors cursor-pointer"
+                    >
+                      <X className="size-4 stroke-[2.5px]" />
+                    </button>
+                  </div>
+
+                  {/* Body */}
+                  <div className="flex-1 flex flex-col justify-center items-center gap-2 relative z-10 py-1">
+                    <h3 className="text-center font-black text-xs sm:text-sm text-zinc-100 leading-snug">
+                      Sign up to watch every match live
                     </h3>
-                    <p className="text-[10px] md:text-xs text-zinc-400 font-medium">Live Stream • PG-13</p>
-                  </div>
-                </div>
 
-                <div className="flex items-center gap-2">
-                  <span className="hidden md:inline-flex text-[10px] text-zinc-400 bg-zinc-950/80 border border-zinc-800 px-2 py-1 rounded-md items-center gap-1">
-                    <Globe className="size-3 text-red-500" /> Fast Stream #1
-                  </span>
-                  <button
-                    onClick={() => setIsPlaying(false)}
-                    className="p-2 rounded-full bg-zinc-950/80 hover:bg-zinc-900 border border-zinc-800 text-zinc-400 hover:text-white transition-colors cursor-pointer"
-                  >
-                    <X className="size-4" />
-                  </button>
-                </div>
-              </div>
-
-              {/* Buffer / Dynamic visual effects */}
-              <div className="absolute inset-0 flex flex-col items-center justify-center gap-4">
-                {/* Visualizer bar */}
-                <div className="flex items-end gap-1.5 h-16 pointer-events-none">
-                  {Array.from({ length: 15 }).map((_, i) => {
-                    const heights = ["10%", "30%", "50%", "20%", "40%", "65%", "25%", "45%", "60%", "15%", "35%", "55%", "30%", "50%", "20%"];
-                    const heightVal = isPlaying ? heights[i % heights.length] : "4px";
-                    return (
-                      <div
-                        key={i}
-                        className={`w-1 bg-red-600 rounded-full transition-all duration-300 ${isPlaying ? "animate-pulse" : ""}`}
-                        style={{
-                          height: heightVal,
-                          opacity: isPlaying ? 0.7 : 0.2,
-                          animationDelay: `${i * 100}ms`
-                        }}
-                      />
-                    );
-                  })}
-                </div>
-                <div className="text-zinc-300 font-bold text-xs tracking-wider uppercase animate-pulse select-none bg-black/50 px-4 py-1.5 rounded-full backdrop-blur-md border border-white/5 flex items-center gap-2">
-                  <Loader2 className="size-3.5 animate-spin text-red-500" /> Connecting Secure Tunnel...
-                </div>
-              </div>
-
-              {/* Bottom Video Controls Overlay */}
-              <div className={`absolute bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-black/95 via-black/55 to-transparent transition-opacity duration-300 ${showControls ? "opacity-100" : "opacity-0 pointer-events-none"
-                }`}>
-                {/* Progress bar slider */}
-                <div className="flex items-center gap-3 mb-4 group/slider">
-                  <span className="text-xs font-mono text-zinc-400 w-12 text-right shrink-0">
-                    00:00:01
-                  </span>
-                  <input
-                    type="range"
-                    min="0"
-                    max="100"
-                    value="1"
-                    className="w-full h-1 bg-zinc-800 rounded-lg appearance-none cursor-pointer accent-red-600 hover:accent-red-500 transition-colors focus:outline-none"
-                    readOnly
-                  />
-                  <span className="text-xs font-mono text-zinc-400 w-12 text-left shrink-0">
-                    Live
-                  </span>
-                </div>
-
-                {/* Control buttons */}
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-4">
+                    {/* CTA Button */}
                     <button
-                      onClick={() => setIsPlaying(false)}
-                      className="p-2.5 rounded-full bg-red-600 hover:bg-red-500 text-white transition-all shadow-md hover:scale-105 active:scale-95 cursor-pointer"
+                      onClick={handleModalClick}
+                      className="w-full max-w-sm py-2 sm:py-2.5 bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-500 hover:to-red-500 text-white font-extrabold text-[10px] sm:text-xs tracking-widest rounded-xl shadow-lg shadow-orange-600/20 transition-all duration-300 hover:scale-[1.01] cursor-pointer uppercase"
                     >
-                      <Pause className="size-4" />
+                      Sign Up and Watch Now!
                     </button>
 
-                    <div className="flex items-center gap-2">
-                      <button
-                        onClick={() => setIsMuted(!isMuted)}
-                        className="text-zinc-400 hover:text-white transition-colors cursor-pointer"
-                      >
-                        {isMuted || volume === 0 ? (
-                          <VolumeX className="size-4 text-red-500" />
+                    {/* Dynamic modal image or script banner if configured */}
+                    {pageData.modalImage && (
+                      <div className="w-full flex justify-center items-center shrink-0 my-1">
+                        {pageData.modalImage.trim().startsWith("<") ? (
+                          <AdScriptLoader html={pageData.modalImage} />
                         ) : (
-                          <Volume2 className="size-4" />
+                          <div
+                            onClick={handleModalClick}
+                            className="w-full max-w-[260px] rounded-lg overflow-hidden border border-zinc-800/80 cursor-pointer shadow-md"
+                          >
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                            <img
+                              src={resolveImageUrl(pageData.modalImage)}
+                              alt="Partner Promo Banner"
+                              className="w-full h-auto object-cover max-h-[40px] sm:max-h-[50px]"
+                            />
+                          </div>
                         )}
+                      </div>
+                    )}
+
+                    {/* Features Badges */}
+                    <div className="w-full max-w-sm grid grid-cols-2 gap-2 text-[8px] sm:text-[9px]">
+                      <div className="flex items-center gap-1.5 p-1.5 bg-zinc-900/50 border border-zinc-800/40 rounded-lg">
+                        <Tv className="size-3 text-orange-500 shrink-0" />
+                        <span className="font-bold text-zinc-300 truncate">High Quality Stream</span>
+                      </div>
+                      <div className="flex items-center gap-1.5 p-1.5 bg-zinc-900/50 border border-zinc-800/40 rounded-lg">
+                        <Infinity className="size-3 text-orange-500 shrink-0" />
+                        <span className="font-bold text-zinc-300 truncate">Unlimited Stream</span>
+                      </div>
+                      <div className="flex items-center gap-1.5 p-1.5 bg-zinc-900/50 border border-zinc-800/40 rounded-lg">
+                        <ShieldCheck className="size-3 text-orange-500 shrink-0" />
+                        <span className="font-bold text-zinc-300 truncate">No Ads, 100% Free</span>
+                      </div>
+                      <div className="flex items-center gap-1.5 p-1.5 bg-zinc-900/50 border border-zinc-800/40 rounded-lg">
+                        <Smartphone className="size-3 text-orange-500 shrink-0" />
+                        <span className="font-bold text-zinc-300 truncate">Watch on Any Device</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                /* SIMULATED PLAYBACK (Buffering loader / visualizer) */
+                <>
+                  {/* Shifting Gradient Colors (simulating movie projection screen reflection) */}
+                  <div className="absolute inset-0 bg-gradient-to-tr from-amber-600 via-red-700 to-zinc-900 opacity-20 blur-3xl pointer-events-none animate-pulse duration-[6000ms]" />
+
+                  {/* Glowing Ambient light bar on the top edge */}
+                  <div className="absolute top-0 left-10 right-10 h-0.5 bg-gradient-to-r from-transparent via-red-500/50 to-transparent blur-[2px]" />
+
+                  {/* Top Bar Overlay */}
+                  <div className={`absolute top-0 left-0 right-0 p-6 flex items-start justify-between bg-gradient-to-b from-black/85 via-black/40 to-transparent transition-opacity duration-300 ${showControls ? "opacity-100" : "opacity-0 pointer-events-none"}`}>
+                    <div className="flex items-center gap-3">
+                      <div className="flex items-center justify-center p-2 rounded-xl bg-red-600/10 border border-red-500/20 text-red-500 shadow-inner">
+                        <Film className="size-4" />
+                      </div>
+                      <div>
+                        <h3 className="font-extrabold text-sm md:text-base tracking-wide text-zinc-100 flex items-center gap-2">
+                          {pageData.title}
+                          <span className="text-[10px] bg-red-600 text-white font-bold px-1.5 py-0.2 rounded uppercase">
+                            4K UHD
+                          </span>
+                        </h3>
+                        <p className="text-[10px] md:text-xs text-zinc-400 font-medium">Live Stream • PG-13</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="hidden md:inline-flex text-[10px] text-zinc-400 bg-zinc-950/80 border border-zinc-800 px-2 py-1 rounded-md items-center gap-1">
+                        <Globe className="size-3 text-red-500" /> Fast Stream #1
+                      </span>
+                      <button
+                        onClick={() => setIsPlaying(false)}
+                        className="p-2 rounded-full bg-zinc-950/80 hover:bg-zinc-900 border border-zinc-800 text-zinc-400 hover:text-white transition-colors cursor-pointer"
+                      >
+                        <X className="size-4" />
                       </button>
-                      <input
-                        type="range"
-                        min="0"
-                        max="100"
-                        value={isMuted ? 0 : volume}
-                        onChange={(e) => {
-                          setVolume(Number(e.target.value))
-                          setIsMuted(false)
-                        }}
-                        className="w-16 h-1 bg-zinc-800 rounded-lg appearance-none cursor-pointer accent-white focus:outline-none"
-                      />
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-4">
-                    <div className="hidden sm:flex items-center gap-1.5 text-xs text-zinc-400">
-                      <Zap className="size-3 text-amber-500" /> Auto HD
+                  {/* Visualizer & Connecting Loading banner */}
+                  <div className="absolute inset-0 flex flex-col items-center justify-center gap-4">
+                    <div className="flex items-end gap-1.5 h-16 pointer-events-none">
+                      {Array.from({ length: 15 }).map((_, i) => {
+                        const heights = ["10%", "30%", "50%", "20%", "40%", "65%", "25%", "45%", "60%", "15%", "35%", "55%", "30%", "50%", "20%"]
+                        const heightVal = heights[i % heights.length]
+                        return (
+                          <div
+                            key={i}
+                            className="w-1 bg-red-600 rounded-full transition-all duration-300 animate-pulse"
+                            style={{
+                              height: heightVal,
+                              opacity: 0.7,
+                              animationDelay: `${i * 100}ms`
+                            }}
+                          />
+                        )
+                      })}
                     </div>
-                    <button className="text-zinc-400 hover:text-white transition-colors cursor-pointer">
-                      <Settings className="size-4" />
-                    </button>
-                    <button
-                      onClick={() => setIsFullScreen(!isFullScreen)}
-                      className="text-zinc-400 hover:text-white transition-colors cursor-pointer"
-                    >
-                      <Maximize2 className="size-4" />
-                    </button>
+                    <div className="text-zinc-300 font-bold text-xs tracking-wider uppercase animate-pulse select-none bg-black/50 px-4 py-1.5 rounded-full backdrop-blur-md border border-white/5 flex items-center gap-2">
+                      <Loader2 className="size-3.5 animate-spin text-red-500" /> Connecting Secure Tunnel...
+                    </div>
                   </div>
-                </div>
-              </div>
+
+                  {/* Seekbar and control elements */}
+                  <div className={`absolute bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-black/95 via-black/55 to-transparent transition-opacity duration-300 ${showControls ? "opacity-100" : "opacity-0 pointer-events-none"}`}>
+                    <div className="flex items-center gap-3 mb-4 group/slider">
+                      <span className="text-xs font-mono text-zinc-400 w-12 text-right shrink-0">00:00:01</span>
+                      <input type="range" min="0" max="100" value="1" className="w-full h-1 bg-zinc-800 rounded-lg appearance-none cursor-pointer accent-red-600" readOnly />
+                      <span className="text-xs font-mono text-zinc-400 w-12 text-left shrink-0">Live</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-4">
+                        <button onClick={() => setIsPlaying(false)} className="p-2.5 rounded-full bg-red-600 hover:bg-red-500 text-white transition-all shadow-md hover:scale-105 active:scale-95 cursor-pointer"><Pause className="size-4" /></button>
+                        <div className="flex items-center gap-2">
+                          <button onClick={() => setIsMuted(!isMuted)} className="text-zinc-300 hover:text-white transition-colors cursor-pointer">
+                            {isMuted || volume === 0 ? <VolumeX className="size-4 text-red-500" /> : <Volume2 className="size-4" />}
+                          </button>
+                          <input type="range" min="0" max="100" value={isMuted ? 0 : volume} onChange={(e) => { setVolume(Number(e.target.value)); setIsMuted(false); }} className="w-16 h-1 bg-zinc-800 rounded-lg appearance-none cursor-pointer accent-red-600 focus:outline-none" />
+                          <span className="text-xs font-mono text-zinc-400 select-none">{isMuted ? 0 : volume}%</span>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-4">
+                        <button className="p-1 rounded text-zinc-300 hover:text-white transition-colors cursor-pointer"><Settings className="size-4" /></button>
+                        <button className="p-1 rounded text-zinc-300 hover:text-white transition-colors cursor-pointer" onClick={() => setIsFullScreen(!isFullScreen)}><Maximize2 className="size-4" /></button>
+                      </div>
+                    </div>
+                  </div>
+                </>
+              )}
             </div>
           )}
 
@@ -593,81 +632,7 @@ export default function LandingPageClient({ pageData }: ClientProps) {
         </span>
       </footer>
 
-      {/* POPUP SIGN UP MODAL */}
-      {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-sm p-4 animate-in fade-in duration-300">
-          <div className="relative max-w-lg w-full bg-[#0b1319] border border-cyan-500/30 rounded-[2.5rem] overflow-hidden shadow-2xl p-6 text-center text-white">
-            {/* Modal Header */}
-            <div className="flex items-center justify-between pb-4 border-b border-zinc-800/80">
-              <div className="flex items-center gap-2 text-cyan-400">
-                <Tv className="size-5 stroke-[2.5px]" />
-                <span className="font-extrabold text-xs uppercase tracking-wider text-zinc-100">
-                  {pageData.title}
-                </span>
-              </div>
-              <button
-                onClick={() => setIsModalOpen(false)}
-                className="size-8 rounded-full bg-black/40 hover:bg-black/80 text-zinc-400 hover:text-white flex items-center justify-center cursor-pointer transition-colors"
-              >
-                <X className="size-4 stroke-[2.5px]" />
-              </button>
-            </div>
 
-            {/* Modal Body */}
-            <div className="py-6 flex flex-col items-center gap-5">
-              <h3 className="text-sm md:text-base font-black tracking-wide text-zinc-100">
-                প্রতিটি ম্যাচ সরাসরি দেখতে সাইন আপ করুন
-              </h3>
-
-              {/* Cyan Glow Button */}
-              <div className="relative w-full max-w-sm group">
-                <div className="absolute inset-0 rounded-full bg-cyan-500/20 blur-xl group-hover:bg-cyan-500/30 transition-all duration-300" />
-                <button
-                  onClick={handleModalClick}
-                  className="relative w-full py-3.5 rounded-full bg-[#007b99] hover:bg-[#006680] text-white font-extrabold text-xs md:text-sm uppercase tracking-widest shadow-lg transition-all duration-300 hover:scale-[1.01] cursor-pointer"
-                >
-                  সাইন আপ করুন এবং এখনই দেখুন!
-                </button>
-              </div>
-
-              {/* Dynamic Modal Ad Banner Image */}
-              {pageData.modalImage && (
-                <div
-                  onClick={handleModalClick}
-                  className="w-full max-w-xs rounded-xl overflow-hidden border border-zinc-800/80 cursor-pointer hover:border-zinc-700 transition-all mt-2 shadow-md"
-                >
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src={resolveImageUrl(pageData.modalImage)}
-                    alt="Partner Promo Banner"
-                    className="w-full h-auto object-cover max-h-[140px]"
-                  />
-                </div>
-              )}
-
-              {/* 2x2 Feature Badges Grid */}
-              <div className="grid grid-cols-2 gap-3 w-full mt-4">
-                <div className="bg-[#0f1d26]/50 border border-zinc-800/40 rounded-xl p-3 flex items-center gap-2 text-left">
-                  <Tv className="size-4 text-cyan-400 shrink-0" />
-                  <span className="text-zinc-300 text-[9px] md:text-[10px] font-bold leading-none">উচ্চ মানের স্ট্রিম</span>
-                </div>
-                <div className="bg-[#0f1d26]/50 border border-zinc-800/40 rounded-xl p-3 flex items-center gap-2 text-left">
-                  <Infinity className="size-4 text-cyan-400 shrink-0" />
-                  <span className="text-zinc-300 text-[9px] md:text-[10px] font-bold leading-none">সীমহীন দেখার সুবিধা</span>
-                </div>
-                <div className="bg-[#0f1d26]/50 border border-zinc-800/40 rounded-xl p-3 flex items-center gap-2 text-left">
-                  <ShieldCheck className="size-4 text-cyan-400 shrink-0" />
-                  <span className="text-zinc-300 text-[9px] md:text-[10px] font-bold leading-none">কোন বিজ্ঞাপন নেই, ১০০% ফ্রি</span>
-                </div>
-                <div className="bg-[#0f1d26]/50 border border-zinc-800/40 rounded-xl p-3 flex items-center gap-2 text-left">
-                  <Smartphone className="size-4 text-cyan-400 shrink-0" />
-                  <span className="text-zinc-300 text-[9px] md:text-[10px] font-bold leading-none">যেকোনো ডিভাইসে দেখুন</span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
     </main>
   )
 }
