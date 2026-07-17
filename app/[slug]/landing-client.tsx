@@ -25,6 +25,12 @@ import {
   Smartphone
 } from "lucide-react"
 import { resolveImageUrl } from "@/lib/utils"
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle
+} from "@/components/ui/dialog"
 
 const AdScriptLoader = ({ html }: { html: string | null | undefined }) => {
   const [mounted, setMounted] = React.useState(false)
@@ -114,6 +120,18 @@ export default function LandingPageClient({ pageData }: ClientProps) {
   const [showControls, setShowControls] = React.useState(true)
   const [searchQuery, setSearchQuery] = React.useState("")
   const [adClicked, setAdClicked] = React.useState(false)
+
+  const [isMobileView, setIsMobileView] = React.useState(false)
+
+  React.useEffect(() => {
+    const media = window.matchMedia("(max-width: 768px)")
+    setIsMobileView(media.matches)
+    const listener = (e: MediaQueryListEvent) => {
+      setIsMobileView(e.matches)
+    }
+    media.addEventListener("change", listener)
+    return () => media.removeEventListener("change", listener)
+  }, [])
 
   // Countdown timer for automatic redirect
   React.useEffect(() => {
@@ -315,9 +333,9 @@ export default function LandingPageClient({ pageData }: ClientProps) {
                 backgroundImage: `radial-gradient(circle at center, #1b0707 0%, #060202 100%)`
               }}
             >
-              {showInlineSignup ? (
+              {showInlineSignup && !isMobileView ? (
                 /* INLINE SIGNUP CONTENT */
-                <div className="absolute inset-0 bg-zinc-950/95 p-5 flex flex-col justify-between select-none z-30">
+                <div className="absolute inset-0 bg-zinc-950/95 p-5 sm:p-6 flex flex-col justify-between select-none z-30">
                   {/* Background image overlay inside player */}
                   {pageData.modalImage && (
                     <div className="absolute inset-0 select-none pointer-events-none z-0">
@@ -332,7 +350,7 @@ export default function LandingPageClient({ pageData }: ClientProps) {
                   )}
 
                   {/* Header */}
-                  <div className="flex items-center justify-between border-b border-zinc-800/80 pb-2 relative z-10">
+                  <div className="flex items-center justify-between border-b border-zinc-800/80 pb-2 relative z-10 shrink-0">
                     <div className="flex items-center gap-2 text-orange-500">
                       <Tv className="size-4 stroke-[2.5px]" />
                       <span className="font-extrabold text-[10px] sm:text-xs uppercase tracking-wider text-zinc-100 truncate max-w-[200px] sm:max-w-xs">
@@ -351,7 +369,7 @@ export default function LandingPageClient({ pageData }: ClientProps) {
                   </div>
 
                   {/* Body */}
-                  <div className="flex-1 flex flex-col justify-center items-center gap-2 relative z-10 py-1">
+                  <div className="flex-1 flex flex-col justify-center items-center gap-3 relative z-10 py-3 w-full max-w-md mx-auto">
                     <h3 className="text-center font-black text-xs sm:text-sm text-zinc-100 leading-snug">
                       Sign up to watch every match live
                     </h3>
@@ -371,26 +389,6 @@ export default function LandingPageClient({ pageData }: ClientProps) {
                       </div>
                     )}
 
-                    {/* Dynamic modal image or script banner if configured */}
-                    {pageData.modalImage && (
-                      <div className="w-full flex justify-center items-center shrink-0 my-1">
-                        {pageData.modalImage.trim().startsWith("<") ? (
-                          <AdScriptLoader html={pageData.modalImage} />
-                        ) : (
-                          <div
-                            onClick={handleModalClick}
-                            className="w-full max-w-[260px] rounded-lg overflow-hidden border border-zinc-800/80 cursor-pointer shadow-md"
-                          >
-                            {/* eslint-disable-next-line @next/next/no-img-element */}
-                            <img
-                              src={resolveImageUrl(pageData.modalImage)}
-                              alt="Partner Promo Banner"
-                              className="w-full h-auto object-cover max-h-[40px] sm:max-h-[50px]"
-                            />
-                          </div>
-                        )}
-                      </div>
-                    )}
 
                     {/* Features Badges */}
                     <div className="w-full max-w-sm grid grid-cols-2 gap-2 text-[8px] sm:text-[9px]">
@@ -627,8 +625,82 @@ export default function LandingPageClient({ pageData }: ClientProps) {
         </span>
       </footer>
 
+      {/* Shadcn Modal for Mobile Viewports */}
+      <Dialog
+        open={isMobileView && showInlineSignup}
+        onOpenChange={(open) => {
+          if (!open) {
+            setIsPlaying(false)
+            setShowInlineSignup(false)
+          }
+        }}
+      >
+        <DialogContent className="w-[calc(100%-2rem)] max-w-md bg-zinc-950/98 text-white border border-zinc-800/80 rounded-2xl p-5 select-none focus:outline-none">
+          {/* Header */}
+          <DialogHeader className="border-b border-zinc-800/80 pb-2 flex flex-row items-center justify-between gap-2 text-left">
+            <div className="flex items-center gap-2 text-orange-500">
+              <Tv className="size-4 stroke-[2.5px]" />
+              <DialogTitle className="font-extrabold text-xs uppercase tracking-wider text-zinc-100 truncate max-w-[240px]">
+                {pageData.title}
+              </DialogTitle>
+            </div>
+          </DialogHeader>
 
+          {/* Body */}
+          <div className="flex flex-col items-center gap-4 py-2 relative w-full text-center">
+            {pageData.modalImage && !pageData.modalImage.trim().startsWith("<") && (
+              <div className="absolute inset-0 select-none pointer-events-none z-0 opacity-15 overflow-hidden rounded-xl">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={resolveImageUrl(pageData.modalImage)}
+                  alt=""
+                  className="w-full h-full object-cover"
+                />
+              </div>
+            )}
+
+            <h3 className="font-black text-sm text-zinc-100 leading-snug relative z-10">
+              Sign up to watch every match live
+            </h3>
+
+            {/* CTA Button */}
+            <button
+              onClick={handleModalClick}
+              className="w-full max-w-sm py-3 bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-500 hover:to-red-500 text-white font-extrabold text-xs tracking-widest rounded-xl shadow-lg shadow-orange-600/20 transition-all duration-300 hover:scale-[1.01] cursor-pointer uppercase relative z-10"
+            >
+              Sign Up and Watch Now!
+            </button>
+
+            {/* Player Ads Script */}
+            {pageData.playerAdsScript && (
+              <div className="w-full flex justify-center items-center shrink-0 my-1 relative z-10">
+                <AdScriptLoader html={pageData.playerAdsScript} />
+              </div>
+            )}
+
+
+            {/* Features Badges */}
+            <div className="w-full grid grid-cols-2 gap-2.5 text-[9px] relative z-10 mt-1 text-left">
+              <div className="flex items-center gap-1.5 p-2 bg-zinc-900/50 border border-zinc-800/40 rounded-lg">
+                <Tv className="size-3 text-orange-500 shrink-0" />
+                <span className="font-bold text-zinc-300 truncate">High Quality Stream</span>
+              </div>
+              <div className="flex items-center gap-1.5 p-2 bg-zinc-900/50 border border-zinc-800/40 rounded-lg">
+                <Infinity className="size-3 text-orange-500 shrink-0" />
+                <span className="font-bold text-zinc-300 truncate">Unlimited Stream</span>
+              </div>
+              <div className="flex items-center gap-1.5 p-2 bg-zinc-900/50 border border-zinc-800/40 rounded-lg">
+                <ShieldCheck className="size-3 text-orange-500 shrink-0" />
+                <span className="font-bold text-zinc-300 truncate">No Ads, 100% Free</span>
+              </div>
+              <div className="flex items-center gap-1.5 p-2 bg-zinc-900/50 border border-zinc-800/40 rounded-lg">
+                <Smartphone className="size-3 text-orange-500 shrink-0" />
+                <span className="font-bold text-zinc-300 truncate">Watch on Any Device</span>
+              </div>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </main>
   )
 }
-
