@@ -745,10 +745,8 @@ export default function AdminPage() {
             </div>
 
             <DialogFooter className="mt-4 bg-white">
-              <DialogClose>
-                <Button type="button" variant="outline" className="h-10 rounded-xl cursor-pointer">
-                  Cancel
-                </Button>
+              <DialogClose render={<Button type="button" variant="outline" className="h-10 rounded-xl cursor-pointer" />}>
+                Cancel
               </DialogClose>
               <Button
                 type="submit"
@@ -785,10 +783,8 @@ export default function AdminPage() {
           </div>
 
           <DialogFooter className="mt-3">
-            <DialogClose >
-              <Button type="button" variant="outline" className="h-10 rounded-xl cursor-pointer">
-                Cancel
-              </Button>
+            <DialogClose render={<Button type="button" variant="outline" className="h-10 rounded-xl cursor-pointer" />}>
+              Cancel
             </DialogClose>
             <Button
               onClick={handleConfirmDelete}

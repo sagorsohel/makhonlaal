@@ -76,14 +76,13 @@ const AdScriptLoader = ({ html }: { html: string | null | undefined }) => {
 
   const width = 320
   const height = 50
- 
+
   return (
     <div className="w-full flex justify-center items-center overflow-hidden">
       <iframe
         srcDoc={iframeSrcDoc}
         width={width}
         height={height}
-        allowTransparency={true}
         style={{ border: "none", overflow: "hidden", background: "transparent", backgroundColor: "transparent" }}
         scrolling="no"
         title="Ad Space"
@@ -585,9 +584,7 @@ export default function LandingPageClient({ pageData }: ClientProps) {
             <span className="text-[10px] font-extrabold uppercase bg-red-600/20 text-red-500 border border-red-500/20 px-2 py-0.5 rounded-full">
               Overview
             </span>
-            <span className="text-zinc-500 text-xs font-semibold">
-              Released in {new Date().getFullYear()}
-            </span>
+
           </div>
           <h2 className="text-xl font-black mt-2 text-zinc-100 uppercase tracking-wide">
             {pageData.title}
