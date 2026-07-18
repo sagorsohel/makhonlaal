@@ -272,9 +272,7 @@ export default function LandingPageClient({ pageData }: ClientProps) {
           <h1 className="text-2xl font-black tracking-widest text-zinc-100 uppercase sm:text-3xl md:text-4xl drop-shadow-[0_2px_10px_rgba(239,68,68,0.2)]">
             {pageData.title}
           </h1>
-          <p className="mt-1.5 text-[11px] font-medium text-zinc-500 uppercase tracking-widest sm:text-xs">
-            Premium Cinematic Streaming Experience
-          </p>
+
         </div>
       </header>
 
