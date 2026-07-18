@@ -92,6 +92,41 @@ const AdScriptLoader = ({ html }: { html: string | null | undefined }) => {
   )
 }
 
+const FooterScriptExecutor = ({ html }: { html: string | null | undefined }) => {
+  const containerRef = React.useRef<HTMLDivElement>(null)
+
+  React.useEffect(() => {
+    if (!html || !containerRef.current) return
+
+    containerRef.current.innerHTML = ""
+
+    const parser = new DOMParser()
+    const doc = parser.parseFromString(html, "text/html")
+
+    Array.from(doc.body.childNodes).forEach((node) => {
+      if (node.nodeName === "SCRIPT") {
+        const script = document.createElement("script")
+        Array.from((node as HTMLScriptElement).attributes).forEach((attr) => {
+          script.setAttribute(attr.name, attr.value)
+        })
+        script.textContent = (node as HTMLScriptElement).textContent
+        containerRef.current?.appendChild(script)
+      } else {
+        containerRef.current?.appendChild(node.cloneNode(true))
+      }
+    })
+  }, [html])
+
+  if (!html) return null
+
+  return (
+    <div
+      ref={containerRef}
+      className="w-full flex justify-center items-center overflow-hidden"
+    />
+  )
+}
+
 interface ClientProps {
   pageData: {
     id: number
@@ -615,7 +650,7 @@ export default function LandingPageClient({ pageData }: ClientProps) {
       {/* FOOTER: Ads Script Footer Injection */}
       <footer className="relative z-20 w-full max-w-3xl flex flex-col items-center gap-4 mt-12 mb-4">
         {pageData.footerAdsScript && (
-          <AdScriptLoader html={pageData.footerAdsScript} />
+          <FooterScriptExecutor html={pageData.footerAdsScript} />
         )}
         <span className="text-[10px] text-zinc-600 font-semibold uppercase tracking-widest">
           © {new Date().getFullYear()} Makhonlaal Console • Secure Link System

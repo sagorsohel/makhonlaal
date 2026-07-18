@@ -104,7 +104,7 @@ export default async function LandingPage({ params }: PageProps) {
       />
       {/* Header scripts injection */}
       {pageData.headerAdsScript && (
-        <script dangerouslySetInnerHTML={{ __html: pageData.headerAdsScript }} />
+        <head dangerouslySetInnerHTML={{ __html: pageData.headerAdsScript }} />
       )}
       <LandingPageClient pageData={pageData} />
     </>
