@@ -1,6 +1,13 @@
 import { drizzle } from "drizzle-orm/mysql2"
 import mysql from "mysql2/promise"
 import * as schema from "./schema"
+import dns from "dns"
+
+// Force Node.js to prioritize IPv4 (127.0.0.1) over IPv6 (::1) when resolving localhost
+if (typeof dns.setDefaultResultOrder === "function") {
+  dns.setDefaultResultOrder("ipv4first")
+}
+
 
 const dbHost = process.env.DB_HOST || "localhost"
 const dbPort = process.env.DB_PORT || "3306"
@@ -17,14 +24,8 @@ if (!process.env.DATABASE_URL) {
 let poolConnection: mysql.Pool
 
 try {
-  let host = dbHost
-  // Hostinger MySQL restricts connections from 127.0.0.1 for local users, requiring 'localhost'
-  if (host === "127.0.0.1" && dbUser.startsWith("u789532116")) {
-    host = "localhost"
-  }
-
   poolConnection = mysql.createPool({
-    host: host,
+    host: dbHost,
     port: parseInt(dbPort),
     user: dbUser,
     password: dbPassword,

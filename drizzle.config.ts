@@ -11,7 +11,7 @@ export default defineConfig({
   out: "./drizzle",
   dialect: "mysql",
   dbCredentials: {
-    host: dbHost === "127.0.0.1" && dbUser.startsWith("u789532116") ? "localhost" : dbHost,
+    host: dbHost,
     port: parseInt(dbPort),
     user: dbUser,
     password: dbPassword,
