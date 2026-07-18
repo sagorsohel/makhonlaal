@@ -63,13 +63,13 @@ export default function LoginPage() {
 
       {/* Top back navigation */}
       <div className="absolute top-8 left-8 z-20">
-        <Link
-          href="/"
-          className="group flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-zinc-400 hover:text-white transition-colors"
+        <button
+          onClick={() => router.back()}
+          className="group flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-zinc-400 hover:text-white transition-colors cursor-pointer"
         >
           <ArrowLeft className="size-4 group-hover:-translate-x-1 transition-transform" />
           Back to Streaming
-        </Link>
+        </button>
       </div>
 
       {/* Login Card wrapper */}
