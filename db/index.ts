@@ -68,9 +68,18 @@ async function initializeDatabase() {
         \`redirect_url\` TEXT NULL,
         \`footer_ads_script\` TEXT NULL,
         \`player_ads_script\` TEXT NULL,
+        \`mobile_sticky_ads_script\` TEXT NULL,
         \`created_at\` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
       ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
     `)
+
+    try {
+      await connection.execute(`
+        ALTER TABLE \`pages\` ADD COLUMN \`mobile_sticky_ads_script\` TEXT NULL;
+      `)
+    } catch {
+      // Column may already exist
+    }
 
     // 3. Seed admin user
     const adminEmail = "admin@makhonlaal.com"

@@ -48,6 +48,7 @@ interface PageData {
   redirectUrl: string | null
   footerAdsScript: string | null
   playerAdsScript: string | null
+  mobileStickyAdsScript: string | null
   createdAt: string
 }
 
@@ -78,6 +79,7 @@ export default function AdminPage() {
   const [redirectUrl, setRedirectUrl] = React.useState("")
   const [footerAdsScript, setFooterAdsScript] = React.useState("")
   const [playerAdsScript, setPlayerAdsScript] = React.useState("")
+  const [mobileStickyAdsScript, setMobileStickyAdsScript] = React.useState("")
 
   const [formError, setFormError] = React.useState<string | null>(null)
   const [isSubmitting, setIsSubmitting] = React.useState(false)
@@ -197,6 +199,7 @@ export default function AdminPage() {
     setRedirectUrl("")
     setFooterAdsScript("")
     setPlayerAdsScript("")
+    setMobileStickyAdsScript("")
     setFormError(null)
     setIsFormOpen(true)
   }
@@ -216,6 +219,7 @@ export default function AdminPage() {
     setRedirectUrl(page.redirectUrl || "")
     setFooterAdsScript(page.footerAdsScript || "")
     setPlayerAdsScript(page.playerAdsScript || "")
+    setMobileStickyAdsScript(page.mobileStickyAdsScript || "")
     setFormError(null)
     setIsFormOpen(true)
   }
@@ -251,6 +255,7 @@ export default function AdminPage() {
         redirectUrl,
         footerAdsScript,
         playerAdsScript,
+        mobileStickyAdsScript,
       }
 
       const url = formMode === "create" ? "/api/pages" : `/api/pages/${editId}`
@@ -739,6 +744,16 @@ export default function AdminPage() {
                   placeholder="<!-- Paste your player ad tag or scripts here (renders below signup button) -->"
                   value={playerAdsScript}
                   onChange={(e) => setPlayerAdsScript(e.target.value)}
+                  className="min-h-16 border border-zinc-200 focus-visible:border-[#006f53] focus-visible:ring-[#006f53]/10 text-xs rounded-lg font-mono"
+                />
+              </div>
+
+              <div className="flex flex-col gap-1.5">
+                <label className="text-[10px] font-black uppercase text-zinc-400 tracking-wider">Mobile Sticky Ads Script</label>
+                <Textarea
+                  placeholder="<!-- Paste your mobile sticky bottom ad tag or scripts here (renders on mobile screens only) -->"
+                  value={mobileStickyAdsScript}
+                  onChange={(e) => setMobileStickyAdsScript(e.target.value)}
                   className="min-h-16 border border-zinc-200 focus-visible:border-[#006f53] focus-visible:ring-[#006f53]/10 text-xs rounded-lg font-mono"
                 />
               </div>

@@ -59,6 +59,7 @@ export async function PUT(
       redirectUrl,
       footerAdsScript,
       playerAdsScript,
+      mobileStickyAdsScript,
     } = body
 
     if (!title || !slug) {
@@ -101,6 +102,7 @@ export async function PUT(
         redirectUrl: redirectUrl || null,
         footerAdsScript: footerAdsScript || null,
         playerAdsScript: playerAdsScript || null,
+        mobileStickyAdsScript: mobileStickyAdsScript || null,
       })
       .where(eq(pages.id, pageId))
 

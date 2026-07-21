@@ -99,6 +99,7 @@ export async function POST(request: Request) {
       redirectUrl,
       footerAdsScript,
       playerAdsScript,
+      mobileStickyAdsScript,
     } = body
 
     if (!title || !slug) {
@@ -139,6 +140,7 @@ export async function POST(request: Request) {
       redirectUrl: redirectUrl || null,
       footerAdsScript: footerAdsScript || null,
       playerAdsScript: playerAdsScript || null,
+      mobileStickyAdsScript: mobileStickyAdsScript || null,
     })
 
     return NextResponse.json({

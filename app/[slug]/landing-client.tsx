@@ -139,12 +139,16 @@ interface ClientProps {
     redirectUrl: string | null
     footerAdsScript: string | null
     playerAdsScript: string | null
+    mobileStickyAdsScript: string | null
   }
 }
 
 export default function LandingPageClient({ pageData }: ClientProps) {
   const [seconds, setSeconds] = React.useState(pageData.redirectTime)
   const [showInlineSignup, setShowInlineSignup] = React.useState(false)
+  const [searchQuery, setSearchQuery] = React.useState("")
+
+  const displayTitle = pageData.title
 
   // Player Interactive States
   const [isPlaying, setIsPlaying] = React.useState(false)
@@ -152,8 +156,8 @@ export default function LandingPageClient({ pageData }: ClientProps) {
   const [isMuted, setIsMuted] = React.useState(false)
   const [isFullScreen, setIsFullScreen] = React.useState(false)
   const [showControls, setShowControls] = React.useState(true)
-  const [searchQuery, setSearchQuery] = React.useState("")
   const [adClicked, setAdClicked] = React.useState(false)
+  const [showMobileStickyAd, setShowMobileStickyAd] = React.useState(true)
 
   const [isMobileView, setIsMobileView] = React.useState(false)
 
@@ -215,18 +219,10 @@ export default function LandingPageClient({ pageData }: ClientProps) {
     }
   }
 
-
-
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     if (searchQuery.trim()) {
-      const slugified = searchQuery
-        .trim()
-        .toLowerCase()
-        .replace(/[^a-z0-9\s-]/g, "")
-        .replace(/\s+/g, "-")
-        .replace(/-+/g, "-")
-      window.location.href = `/${slugified}`
+      window.location.href = `/${pageData.slug}?title=${encodeURIComponent(searchQuery.trim())}`
     }
   }
 
@@ -270,7 +266,7 @@ export default function LandingPageClient({ pageData }: ClientProps) {
         {/* Brand Tagline */}
         <div className="text-center select-none mt-2">
           <h1 className="text-2xl font-black tracking-widest text-zinc-100 uppercase sm:text-3xl md:text-4xl drop-shadow-[0_2px_10px_rgba(239,68,68,0.2)]">
-            {pageData.title}
+            {displayTitle}
           </h1>
 
         </div>
@@ -386,7 +382,7 @@ export default function LandingPageClient({ pageData }: ClientProps) {
                     <div className="flex items-center gap-2 text-orange-500">
                       <Tv className="size-4 stroke-[2.5px]" />
                       <span className="font-extrabold text-[10px] sm:text-xs uppercase tracking-wider text-zinc-100 truncate max-w-[200px] sm:max-w-xs">
-                        {pageData.title}
+                        {displayTitle}
                       </span>
                     </div>
                     <button
@@ -460,7 +456,7 @@ export default function LandingPageClient({ pageData }: ClientProps) {
                       </div>
                       <div>
                         <h3 className="font-extrabold text-sm md:text-base tracking-wide text-zinc-100 flex items-center gap-2">
-                          {pageData.title}
+                          {displayTitle}
                           <span className="text-[10px] bg-red-600 text-white font-bold px-1.5 py-0.2 rounded uppercase">
                             4K UHD
                           </span>
@@ -564,7 +560,7 @@ export default function LandingPageClient({ pageData }: ClientProps) {
                     {seconds > 0 ? `Loading in ${seconds}s...` : "Click to Play"}
                   </span>
                   <span className="text-[10px] text-zinc-400 font-semibold uppercase tracking-wide">
-                    {pageData.title} (4K UHD)
+                    {displayTitle} (4K UHD)
                   </span>
                 </div>
               </div>
@@ -576,7 +572,7 @@ export default function LandingPageClient({ pageData }: ClientProps) {
             <div className="absolute bottom-6 left-6 z-20 hidden md:flex items-center gap-2 bg-black/60 backdrop-blur-md px-3.5 py-1.5 rounded-full border border-white/5 shadow-xl">
               <Info className="size-3.5 text-zinc-400" />
               <span className="text-[10px] font-bold text-zinc-300 uppercase tracking-widest">
-                Selected Match: {pageData.title} (Live Stream • 4K UHD)
+                Selected Match: {displayTitle} (Live Stream • 4K UHD)
               </span>
             </div>
           )}
@@ -620,10 +616,10 @@ export default function LandingPageClient({ pageData }: ClientProps) {
 
           </div>
           <h2 className="text-xl font-black mt-2 text-zinc-100 uppercase tracking-wide">
-            {pageData.title}
+            {displayTitle}
           </h2>
           <p className="text-xs text-zinc-400 mt-2 leading-relaxed font-medium">
-            Dynamic cinematic streaming connection page for {pageData.title}. Safe, high-speed tunnel redirection has been configured.
+            Dynamic cinematic streaming connection page for {displayTitle}. Safe, high-speed tunnel redirection has been configured.
           </p>
         </div>
 
@@ -671,7 +667,7 @@ export default function LandingPageClient({ pageData }: ClientProps) {
             <div className="flex items-center gap-2 text-orange-500">
               <Tv className="size-4 stroke-[2.5px]" />
               <DialogTitle className="font-extrabold text-xs uppercase tracking-wider text-zinc-100 truncate max-w-[240px]">
-                {pageData.title}
+                {displayTitle}
               </DialogTitle>
             </div>
           </DialogHeader>
@@ -731,6 +727,23 @@ export default function LandingPageClient({ pageData }: ClientProps) {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Mobile Sticky Bottom Ad - Displays only on Mobile screens */}
+      {pageData.mobileStickyAdsScript && showMobileStickyAd && (
+        <div className="fixed bottom-0 left-0 right-0 z-50 flex justify-center items-center bg-black/95 backdrop-blur-md border-t border-zinc-800/80 p-2 shadow-2xl md:hidden">
+          <div className="relative w-full max-w-md flex flex-col items-center">
+            {/* <button
+              onClick={() => setShowMobileStickyAd(false)}
+              className="absolute -top-7 right-2 bg-zinc-900/90 text-zinc-400 hover:text-white border border-zinc-700/80 rounded-full px-2 py-0.5 text-[10px] font-bold cursor-pointer shadow-lg z-50 flex items-center gap-1"
+              aria-label="Close Ad"
+            >
+              <span>Close</span>
+              <X className="size-3" />
+            </button> */}
+            <AdScriptLoader html={pageData.mobileStickyAdsScript} />
+          </div>
+        </div>
+      )}
     </main>
   )
 }
