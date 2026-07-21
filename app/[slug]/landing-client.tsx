@@ -323,7 +323,7 @@ export default function LandingPageClient({ pageData }: ClientProps) {
 
       {/* VIDEO PLAYER CONTAINER WITH GLOW BORDER */}
       <section
-        className={`relative z-10 w-full max-w-3xl mt-8 transition-all duration-500 ${isFullScreen
+        className={`relative z-10 w-full max-w-[1280px] mt-8 transition-all duration-500 ${isFullScreen
           ? "fixed inset-0 max-w-none w-screen h-screen z-50 mt-0 p-0 bg-black flex items-center justify-center"
           : "px-2"
           }`}
@@ -331,7 +331,7 @@ export default function LandingPageClient({ pageData }: ClientProps) {
         <div
           className={`relative overflow-hidden w-full transition-all duration-500 ${isFullScreen
             ? "h-full w-full rounded-none border-0"
-            : "aspect-[16/9] rounded-[2rem] border-[3px] border-orange-500/80 shadow-[0_0_35px_rgba(249,115,22,0.3)] bg-zinc-950"
+            : "aspect-[16/9] md:aspect-[19/9] rounded-[2rem] border-[3px] border-orange-500/80 shadow-[0_0_35px_rgba(249,115,22,0.3)] bg-zinc-950"
             }`}
           onMouseMove={() => {
             if (isPlaying) {
