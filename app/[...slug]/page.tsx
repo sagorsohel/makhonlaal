@@ -4,6 +4,8 @@ import { eq, desc } from "drizzle-orm"
 import LandingPageClient from "./landing-client"
 import { Metadata } from "next"
 
+import { cache } from "react"
+
 interface PageProps {
   params: Promise<{ slug: string[] }>
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>
@@ -19,7 +21,7 @@ function getAbsoluteImageUrl(url: string | null | undefined, base: string) {
   return `${base}${url.startsWith("/") ? "" : "/"}${url}`
 }
 
-async function fetchMatchingPage(slugParam: string[]) {
+const fetchMatchingPage = cache(async (slugParam: string[]) => {
   const slugArray = Array.isArray(slugParam) ? slugParam : [slugParam]
   const fullPath = slugArray.join("/")
   const lastSegment = slugArray[slugArray.length - 1]
@@ -65,7 +67,7 @@ async function fetchMatchingPage(slugParam: string[]) {
       return results[0] || null
     })()
 
-    const timeoutPromise = new Promise<null>((resolve) => setTimeout(() => resolve(null), 2500))
+    const timeoutPromise = new Promise<null>((resolve) => setTimeout(() => resolve(null), 1200))
     const matchedPage = await Promise.race([dbQueryPromise, timeoutPromise])
 
     if (matchedPage) {
@@ -76,7 +78,7 @@ async function fetchMatchingPage(slugParam: string[]) {
   }
 
   return fallback
-}
+})
 
 // Generate dynamic metadata for maximum SEO
 export async function generateMetadata({ params, searchParams }: PageProps): Promise<Metadata> {
