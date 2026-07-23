@@ -19,7 +19,7 @@ export async function generateMetadata(): Promise<Metadata> {
     }
   } catch {
     return {
-      title: "Default Live Stream",
+      title: " Live Stream",
       description: "Watch live streaming online in high quality 4K UHD.",
     }
   }
