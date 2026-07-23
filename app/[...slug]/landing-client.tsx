@@ -32,54 +32,66 @@ import {
   DialogTitle
 } from "@/components/ui/dialog"
 
+const executeScriptHtml = (htmlStr: string, parentEl: HTMLElement): Element[] => {
+  const added: Element[] = []
+  if (!htmlStr || typeof window === "undefined") return added
+
+  try {
+    const parser = new DOMParser()
+    const doc = parser.parseFromString(htmlStr, "text/html")
+
+    const processNode = (node: Node) => {
+      if (node.nodeName === "SCRIPT") {
+        const oldScript = node as HTMLScriptElement
+        const newScript = document.createElement("script")
+        Array.from(oldScript.attributes).forEach((attr) => {
+          newScript.setAttribute(attr.name, attr.value)
+        })
+        if (oldScript.src) {
+          newScript.src = oldScript.src
+        }
+        newScript.text = oldScript.text || oldScript.textContent || ""
+        newScript.async = true
+        parentEl.appendChild(newScript)
+        added.push(newScript)
+      } else if (node.nodeType === Node.ELEMENT_NODE) {
+        const clone = (node as HTMLElement).cloneNode(true) as Element
+        parentEl.appendChild(clone)
+        added.push(clone)
+      }
+    }
+
+    Array.from(doc.head.childNodes).forEach(processNode)
+    Array.from(doc.body.childNodes).forEach(processNode)
+  } catch (err) {
+    console.error("Failed to parse script html:", err)
+  }
+
+  return added
+}
+
 const HeaderScriptInjector = ({ html }: { html?: string | null }) => {
   React.useEffect(() => {
     if (!html || typeof window === "undefined") return
 
-    // Guard document.write to prevent ad scripts from wiping page or causing infinite loading
     const originalWrite = document.write
     const originalWriteln = document.writeln
 
     document.write = function (str: string) {
       try {
-        const div = document.createElement("div")
-        div.innerHTML = str
-        Array.from(div.childNodes).forEach((child) => {
-          document.head.appendChild(child.cloneNode(true))
-        })
-      } catch {
-        // ignore write errors
+        executeScriptHtml(str, document.head)
+      } catch (err) {
+        console.error("Ad document.write error:", err)
       }
     }
     document.writeln = document.write
 
-    const container = document.createElement("div")
-    container.innerHTML = html
-
-    const addedElements: Element[] = []
-
-    Array.from(container.childNodes).forEach((node) => {
-      if (node.nodeType === Node.ELEMENT_NODE) {
-        const el = node as HTMLElement
-        if (el.tagName === "SCRIPT") {
-          const script = document.createElement("script")
-          Array.from(el.attributes).forEach((attr) => script.setAttribute(attr.name, attr.value))
-          script.text = el.innerText || el.textContent || ""
-          script.async = true
-          document.head.appendChild(script)
-          addedElements.push(script)
-        } else {
-          const clone = el.cloneNode(true) as Element
-          document.head.appendChild(clone)
-          addedElements.push(clone)
-        }
-      }
-    })
+    const addedElements = executeScriptHtml(html, document.head)
 
     const timer = setTimeout(() => {
       document.write = originalWrite
       document.writeln = originalWriteln
-    }, 1500)
+    }, 3000)
 
     return () => {
       clearTimeout(timer)
@@ -100,50 +112,24 @@ const FooterScriptInjector = ({ html }: { html?: string | null }) => {
   React.useEffect(() => {
     if (!html || typeof window === "undefined") return
 
-    // Guard document.write to prevent ad scripts from wiping page or causing infinite loading
     const originalWrite = document.write
     const originalWriteln = document.writeln
 
     document.write = function (str: string) {
       try {
-        const div = document.createElement("div")
-        div.innerHTML = str
-        Array.from(div.childNodes).forEach((child) => {
-          document.body.appendChild(child.cloneNode(true))
-        })
-      } catch {
-        // ignore write errors
+        executeScriptHtml(str, document.body)
+      } catch (err) {
+        console.error("Footer ad document.write error:", err)
       }
     }
     document.writeln = document.write
 
-    const container = document.createElement("div")
-    container.innerHTML = html
-
-    const addedElements: Element[] = []
-
-    Array.from(container.childNodes).forEach((node) => {
-      if (node.nodeType === Node.ELEMENT_NODE) {
-        const el = node as HTMLElement
-        if (el.tagName === "SCRIPT") {
-          const script = document.createElement("script")
-          Array.from(el.attributes).forEach((attr) => script.setAttribute(attr.name, attr.value))
-          script.text = el.innerText || el.textContent || ""
-          script.async = true
-          document.body.appendChild(script)
-          addedElements.push(script)
-        } else {
-          const clone = el.cloneNode(true) as Element
-          document.body.appendChild(clone)
-          addedElements.push(clone)
-        }
-      }
-    })
+    const addedElements = executeScriptHtml(html, document.body)
 
     const timer = setTimeout(() => {
       document.write = originalWrite
       document.writeln = originalWriteln
-    }, 1500)
+    }, 3000)
 
     return () => {
       clearTimeout(timer)

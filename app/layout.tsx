@@ -23,6 +23,7 @@ export default function RootLayout({
       suppressHydrationWarning
       className={cn("antialiased", fontMono.variable, "font-sans", geist.variable)}
     >
+      <head />
       <body>
         <DisableInspect />
         <ThemeProvider>{children}</ThemeProvider>
