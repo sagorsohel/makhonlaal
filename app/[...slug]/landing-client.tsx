@@ -357,7 +357,7 @@ export default function LandingPageClient({ pageData }: ClientProps) {
 
   return (
     <main
-      className="relative flex min-h-screen flex-col items-center justify-between overflow-x-hidden px-4 py-8 text-white transition-all duration-700 select-none md:py-12"
+      className="relative flex min-h-screen flex-col items-center justify-between overflow-x-hidden px-4 py-2 text-white transition-all duration-700 select-none "
       style={{
         backgroundImage: "radial-gradient(circle at center, #2e0909 0%, #070202 100%)"
       }}
@@ -373,7 +373,7 @@ export default function LandingPageClient({ pageData }: ClientProps) {
       <header className="relative z-30 flex w-full max-w-4xl flex-col items-center gap-6">
         <form
           onSubmit={handleSearchSubmit}
-          className="relative flex w-full max-w-lg items-center rounded-full bg-black/60 p-1.5 border border-red-950/40 shadow-2xl focus-within:border-red-500/50 focus-within:ring-2 focus-within:ring-red-500/25 transition-all duration-300 backdrop-blur-md"
+          className="relative flex w-full max-w-lg items-center rounded-full bg-black/60 p-1 border border-red-900 shadow-2xl focus-within:border-red-500/50 focus-within:ring-2  focus-within:ring-red-500/25 transition-all duration-300 backdrop-blur-md"
         >
           <div className="flex flex-1 items-center px-4 gap-2">
             <Search className="size-4 text-red-500/80 shrink-0" />
@@ -382,20 +382,20 @@ export default function LandingPageClient({ pageData }: ClientProps) {
               placeholder="Search Video..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="h-9 border-0 bg-transparent text-white placeholder:text-zinc-500 focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:border-0 p-0 text-sm w-full md:text-base outline-none"
+              className="h-7 border-0 bg-transparent text-white placeholder:text-zinc-500 focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:border-0 p-0 text-sm w-full md:text-base outline-none"
             />
           </div>
           <Button
             type="submit"
-            className="h-9 rounded-full bg-red-600 hover:bg-red-700 text-white font-black tracking-wider px-6 uppercase shadow-lg shadow-red-600/25 cursor-pointer text-xs md:text-sm transition-all duration-300 hover:scale-105 active:scale-95 shrink-0"
+            className="h-7 rounded-full bg-red-600 hover:bg-red-700 text-white font-black tracking-wider px-6 uppercase shadow-lg shadow-red-600/25 cursor-pointer text-xs md:text-sm transition-all duration-300 hover:scale-105 active:scale-95 shrink-0"
           >
             Search
           </Button>
         </form>
 
         {/* Brand Tagline */}
-        <div className="text-center select-none mt-2">
-          <h1 className="text-2xl font-black tracking-widest text-zinc-100 uppercase sm:text-3xl md:text-4xl drop-shadow-[0_2px_10px_rgba(239,68,68,0.2)]">
+        <div className="text-center select-none">
+          <h1 className="text-xl font-black tracking-widest text-zinc-100 uppercase sm:text-3xl  drop-shadow-[0_2px_10px_rgba(239,68,68,0.2)]">
             {displayTitle}
           </h1>
 
@@ -403,7 +403,7 @@ export default function LandingPageClient({ pageData }: ClientProps) {
       </header>
 
       {/* AD SCRIPT / TOP AD BANNER INJECTION */}
-      <section className="relative z-20 w-full max-w-3xl px-4 mt-6 flex justify-center">
+      <section className="relative z-20 w-full max-w-3xl px-4 mt-2 flex justify-center">
         {pageData.topAdsScript ? (
           <AdScriptLoader html={pageData.topAdsScript} />
         ) : (
@@ -439,7 +439,7 @@ export default function LandingPageClient({ pageData }: ClientProps) {
         )}
 
         {adClicked && (
-          <div className="absolute inset-x-4 top-full mt-2 rounded-xl bg-emerald-950/90 border border-emerald-500/30 p-2.5 text-center text-xs text-emerald-300 flex items-center justify-between backdrop-blur-md z-40 animate-in fade-in slide-in-from-top-2">
+          <div className="absolute inset-x-4 top-full  rounded-xl bg-emerald-950/90 border border-emerald-500/30 p-2.5 text-center text-xs text-emerald-300 flex items-center justify-between backdrop-blur-md z-40 animate-in fade-in slide-in-from-top-2">
             <div className="flex items-center gap-2">
               <ShieldCheck className="size-4 text-emerald-400 shrink-0" />
               <span>Partner Offer link initialized! Click below to proceed.</span>
@@ -453,7 +453,7 @@ export default function LandingPageClient({ pageData }: ClientProps) {
 
       {/* VIDEO PLAYER CONTAINER WITH GLOW BORDER */}
       <section
-        className={`relative z-10 w-full max-w-[1280px] mt-8 transition-all duration-500 ${isFullScreen
+        className={`relative z-10 w-full max-w-4xl mt-3 transition-all duration-500 ${isFullScreen
           ? "fixed inset-0 max-w-none w-screen h-screen z-50 mt-0 p-0 bg-black flex items-center justify-center"
           : "px-2"
           }`}
@@ -461,7 +461,7 @@ export default function LandingPageClient({ pageData }: ClientProps) {
         <div
           className={`relative overflow-hidden w-full transition-all duration-500 ${isFullScreen
             ? "h-full w-full rounded-none border-0"
-            : "aspect-[16/9] md:aspect-[19/9] rounded-[2rem] border-[3px] border-orange-500/80 shadow-[0_0_35px_rgba(249,115,22,0.3)] bg-zinc-950"
+            : "aspect-video rounded-xl sm:rounded-2xl border-2 border-red-600 shadow-[0_0_30px_rgba(220,38,38,0.35)] bg-zinc-950"
             }`}
           onMouseMove={() => {
             if (isPlaying) {
@@ -710,31 +710,31 @@ export default function LandingPageClient({ pageData }: ClientProps) {
       </section>
 
       {/* ACTION BUTTONS IN A ROW */}
-      <footer className="relative z-20 flex w-full max-w-2xl flex-col items-center justify-center gap-4 px-4 mt-8 md:mt-10 sm:flex-row sm:gap-6">
+      <div className="relative z-20 grid grid-cols-3 gap-2.5 sm:gap-4 w-full max-w-4xl px-2 mt-3">
         <Button
           onClick={handlePlayClick}
-          className="w-full sm:w-auto h-12 rounded-2xl bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-500 hover:to-red-500 text-white font-extrabold text-sm uppercase tracking-widest px-8 shadow-xl shadow-orange-600/20 transition-all duration-300 hover:scale-105 active:scale-95 cursor-pointer flex items-center justify-center gap-2 border-0"
+          className="w-full h-11 sm:h-12 rounded-xl bg-red-600 hover:bg-red-700 text-white font-black text-xs sm:text-sm uppercase tracking-wider shadow-lg shadow-red-600/30 transition-all duration-300 hover:scale-[1.02] active:scale-95 cursor-pointer flex items-center justify-center gap-1.5 sm:gap-2 border-0"
         >
           <Play className="size-4 fill-current" />
-          Watch Live Stream
+          <span>WATCH NOW</span>
         </Button>
 
         <Button
           onClick={handlePlayClick}
-          className="w-full sm:w-auto h-12 rounded-2xl bg-zinc-800/80 hover:bg-zinc-700 text-zinc-200 hover:text-white font-extrabold text-sm uppercase tracking-widest px-8 border border-zinc-700/60 shadow-xl backdrop-blur-sm transition-all duration-300 hover:scale-105 active:scale-95 cursor-pointer flex items-center justify-center gap-2"
+          className="w-full h-11 sm:h-12 rounded-xl bg-zinc-900/90 hover:bg-zinc-800 border border-zinc-700/80 text-zinc-200 hover:text-white font-black text-xs sm:text-sm uppercase tracking-wider shadow-md transition-all duration-300 hover:scale-[1.02] active:scale-95 cursor-pointer flex items-center justify-center gap-1.5 sm:gap-2"
         >
           <Monitor className="size-4" />
-          HD 4K Quality
+          <span>HD 4K</span>
         </Button>
 
         <Button
           onClick={handlePlayClick}
-          className="w-full sm:w-auto h-12 rounded-2xl bg-zinc-800/80 hover:bg-zinc-700 text-zinc-200 hover:text-white font-extrabold text-sm uppercase tracking-widest px-8 border border-zinc-700/60 shadow-xl backdrop-blur-sm transition-all duration-300 hover:scale-105 active:scale-95 cursor-pointer flex items-center justify-center gap-2"
+          className="w-full h-11 sm:h-12 rounded-xl bg-zinc-900/90 hover:bg-zinc-800 border border-zinc-700/80 text-zinc-200 hover:text-white font-black text-xs sm:text-sm uppercase tracking-wider shadow-md transition-all duration-300 hover:scale-[1.02] active:scale-95 cursor-pointer flex items-center justify-center gap-1.5 sm:gap-2"
         >
           <Download className="size-4 animate-bounce" />
-          Download Mirror
+          <span>DOWNLOAD</span>
         </Button>
-      </footer>
+      </div>
 
       {/* Dynamic Details Drawer for Cinematic Info */}
       <section className="relative z-10 w-full max-w-2xl mt-12 bg-black/40 border border-zinc-800/60 rounded-3xl p-6 backdrop-blur-sm flex flex-col md:flex-row gap-6 items-start shadow-xl">
