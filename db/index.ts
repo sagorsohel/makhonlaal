@@ -135,5 +135,9 @@ async function initializeDatabase() {
   }
 }
 
-// Trigger initialization once in background
-initializeDatabase()
+// Trigger initialization once in background asynchronously without blocking server boot
+if (typeof window === "undefined") {
+  setTimeout(() => {
+    initializeDatabase().catch((err) => console.error("Auto-init error:", err))
+  }, 100)
+}

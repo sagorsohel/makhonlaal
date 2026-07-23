@@ -6,7 +6,9 @@ import { Metadata } from "next"
 
 export async function generateMetadata(): Promise<Metadata> {
   try {
-    const results = await db.select().from(pages).orderBy(desc(pages.createdAt)).limit(1)
+    const query = db.select().from(pages).orderBy(desc(pages.createdAt)).limit(1)
+    const timeout = new Promise<any[]>((resolve) => setTimeout(() => resolve([]), 1200))
+    const results = await Promise.race([query, timeout])
     const title = results[0]?.title || "Live Streaming Online"
     return {
       title: `${title} - Live Stream Online`,
@@ -39,9 +41,16 @@ export default async function Page() {
   }
 
   try {
-    const results = await db.select().from(pages).orderBy(desc(pages.createdAt)).limit(1)
-    if (results.length > 0) {
-      pageData = results[0] as any
+    const dbQueryPromise = (async () => {
+      const results = await db.select().from(pages).orderBy(desc(pages.createdAt)).limit(1)
+      return results[0] || null
+    })()
+
+    const timeoutPromise = new Promise<null>((resolve) => setTimeout(() => resolve(null), 1200))
+    const matchedPage = await Promise.race([dbQueryPromise, timeoutPromise])
+
+    if (matchedPage) {
+      pageData = matchedPage as any
     }
   } catch (err) {
     console.error("Error loading latest page for homepage:", err)
