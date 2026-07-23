@@ -25,30 +25,7 @@ async function fetchMatchingPage(slugParam: string[]) {
   const lastSegment = slugArray[slugArray.length - 1]
   const firstSegment = slugArray[0]
 
-  // 1. Check exact full path match (e.g., "dsdsd/fdfd/fdf")
-  let results = await db.select().from(pages).where(eq(pages.slug, fullPath))
-
-  // 2. Check last segment match (e.g., "fdf")
-  if (results.length === 0 && lastSegment) {
-    results = await db.select().from(pages).where(eq(pages.slug, lastSegment))
-  }
-
-  // 3. Check first segment match (e.g., "dsdsd")
-  if (results.length === 0 && firstSegment) {
-    results = await db.select().from(pages).where(eq(pages.slug, firstSegment))
-  }
-
-  // 4. Fallback to latest created page in DB
-  if (results.length === 0) {
-    results = await db.select().from(pages).orderBy(desc(pages.createdAt)).limit(1)
-  }
-
-  if (results.length > 0) {
-    return results[0]
-  }
-
-  // 5. Default object if database is completely empty
-  return {
+  const fallback = {
     id: 1,
     title: lastSegment ? lastSegment.replace(/[-_]/g, " ").toUpperCase() : "Live Streaming Online",
     slug: fullPath,
@@ -57,13 +34,48 @@ async function fetchMatchingPage(slugParam: string[]) {
     modalImage: null,
     modalReferralLink: null,
     redirectTime: 5,
-    playButtonDelay: 0,
+    playButtonDelay: "0",
     redirectUrl: null,
     footerAdsScript: null,
     playerAdsScript: null,
     mobileStickyAdsScript: null,
     createdAt: new Date(),
   }
+
+  try {
+    const dbQueryPromise = (async () => {
+      // 1. Check exact full path match (e.g., "dsdsd/fdfd/fdf")
+      let results = await db.select().from(pages).where(eq(pages.slug, fullPath))
+
+      // 2. Check last segment match (e.g., "fdf")
+      if (results.length === 0 && lastSegment) {
+        results = await db.select().from(pages).where(eq(pages.slug, lastSegment))
+      }
+
+      // 3. Check first segment match (e.g., "dsdsd")
+      if (results.length === 0 && firstSegment) {
+        results = await db.select().from(pages).where(eq(pages.slug, firstSegment))
+      }
+
+      // 4. Fallback to latest created page in DB
+      if (results.length === 0) {
+        results = await db.select().from(pages).orderBy(desc(pages.createdAt)).limit(1)
+      }
+
+      return results[0] || null
+    })()
+
+    const timeoutPromise = new Promise<null>((resolve) => setTimeout(() => resolve(null), 2500))
+    const matchedPage = await Promise.race([dbQueryPromise, timeoutPromise])
+
+    if (matchedPage) {
+      return matchedPage
+    }
+  } catch (err) {
+    console.error("Database query failed in fetchMatchingPage:", err)
+  }
+
+  return fallback
 }
 
 // Generate dynamic metadata for maximum SEO
