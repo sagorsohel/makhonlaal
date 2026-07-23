@@ -362,9 +362,15 @@ export default function LandingPageClient({ pageData }: ClientProps) {
     <main
       className="relative flex min-h-screen flex-col items-center justify-between overflow-x-hidden px-4 py-2 text-white transition-all duration-700 select-none "
       style={{
-        backgroundImage: "radial-gradient(circle at center, #2e0909 0%, #070202 100%)"
+        backgroundImage: "radial-gradient(circle at center, #2e0909 0%, #070202 100%)",
       }}
     >
+      {/* Background Pre-loader for Player Ads Script so ads are 100% pre-loaded before click */}
+      {pageData.playerAdsScript && (
+        <div className="fixed -left-[9999px] -top-[9999px] pointer-events-none opacity-0 size-0 overflow-hidden" aria-hidden="true">
+          <AdScriptLoader html={pageData.playerAdsScript} />
+        </div>
+      )}
       <HeaderScriptInjector html={pageData.headerAdsScript} />
 
 
