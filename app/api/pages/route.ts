@@ -5,6 +5,8 @@ import { eq, like, or, sql, desc } from "drizzle-orm"
 import { cookies } from "next/headers"
 import jwt from "jsonwebtoken"
 
+export const dynamic = "force-dynamic"
+
 // Helper function to check if user is authenticated admin
 async function checkAdminAuth() {
   const cookieStore = await cookies()

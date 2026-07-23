@@ -6,6 +6,9 @@ import { Metadata } from "next"
 
 import { cache } from "react"
 
+export const dynamic = "force-dynamic"
+export const revalidate = 0
+
 interface PageProps {
   params: Promise<{ slug: string[] }>
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>
@@ -67,7 +70,7 @@ const fetchMatchingPage = cache(async (slugParam: string[]) => {
       return results[0] || null
     })()
 
-    const timeoutPromise = new Promise<null>((resolve) => setTimeout(() => resolve(null), 1200))
+    const timeoutPromise = new Promise<null>((resolve) => setTimeout(() => resolve(null), 800))
     const matchedPage = await Promise.race([dbQueryPromise, timeoutPromise])
 
     if (matchedPage) {
@@ -82,94 +85,124 @@ const fetchMatchingPage = cache(async (slugParam: string[]) => {
 
 // Generate dynamic metadata for maximum SEO
 export async function generateMetadata({ params, searchParams }: PageProps): Promise<Metadata> {
-  const { slug } = await params
-  const sParams = await searchParams
-  const page = await fetchMatchingPage(slug)
+  try {
+    const { slug } = await params
+    const sParams = await searchParams
+    const page = await fetchMatchingPage(slug)
 
-  const customTitle = typeof sParams?.title === "string" ? sParams.title : (typeof sParams?.q === "string" ? sParams.q : null)
-  const displayTitle = customTitle || page.title
+    const customTitle = typeof sParams?.title === "string" ? sParams.title : (typeof sParams?.q === "string" ? sParams.q : null)
+    const displayTitle = customTitle || page.title
 
-  const title = `${displayTitle} - Live Stream Online`
-  const description = `Watch ${displayTitle} live streaming online in high quality. Quick connection and instant player redirection for ${displayTitle}.`
-  const absoluteImageUrl = getAbsoluteImageUrl(page.modalImage, baseUrl)
+    const title = `${displayTitle} - Live Stream Online`
+    const description = `Watch ${displayTitle} live streaming online in high quality. Quick connection and instant player redirection for ${displayTitle}.`
+    const absoluteImageUrl = getAbsoluteImageUrl(page.modalImage, baseUrl)
 
-  const pathStr = Array.isArray(slug) ? slug.join("/") : slug
-  const canonicalUrl = customTitle ? `/${pathStr}?title=${encodeURIComponent(customTitle)}` : `/${pathStr}`
+    const pathStr = Array.isArray(slug) ? slug.join("/") : slug
+    const canonicalUrl = customTitle ? `/${pathStr}?title=${encodeURIComponent(customTitle)}` : `/${pathStr}`
 
-  return {
-    title,
-    description,
-    metadataBase: new URL(baseUrl),
-    alternates: {
-      canonical: canonicalUrl,
-    },
-    robots: {
-      index: true,
-      follow: true,
-      googleBot: {
+    return {
+      title,
+      description,
+      metadataBase: new URL(baseUrl),
+      alternates: {
+        canonical: canonicalUrl,
+      },
+      robots: {
         index: true,
         follow: true,
-        "max-video-preview": -1,
-        "max-image-preview": "large",
+        googleBot: {
+          index: true,
+          follow: true,
+          "max-video-preview": -1,
+          "max-image-preview": "large",
+        },
       },
-    },
-    openGraph: {
-      title,
-      description,
-      type: "video.other",
-      url: canonicalUrl,
-      siteName: "Makhonlaal Streaming",
-      images: absoluteImageUrl ? [{ url: absoluteImageUrl, alt: title, width: 1200, height: 630 }] : undefined,
-    },
-    twitter: {
-      card: "summary_large_image",
-      title,
-      description,
-      images: absoluteImageUrl ? [absoluteImageUrl] : undefined,
-    },
+      openGraph: {
+        title,
+        description,
+        type: "video.other",
+        url: canonicalUrl,
+        siteName: "Makhonlaal Streaming",
+        images: absoluteImageUrl ? [{ url: absoluteImageUrl, alt: title, width: 1200, height: 630 }] : undefined,
+      },
+      twitter: {
+        card: "summary_large_image",
+        title,
+        description,
+        images: absoluteImageUrl ? [absoluteImageUrl] : undefined,
+      },
+    }
+  } catch {
+    return {
+      title: "Live Stream Online",
+      description: "Watch live streaming online in high quality.",
+    }
   }
 }
 
 export default async function LandingPage({ params, searchParams }: PageProps) {
-  const { slug } = await params
-  const sParams = await searchParams
+  try {
+    const { slug } = await params
+    const sParams = await searchParams
 
-  const rawPageData = await fetchMatchingPage(slug)
-  const customTitle = typeof sParams?.title === "string" ? sParams.title : (typeof sParams?.q === "string" ? sParams.q : null)
-  const displayTitle = customTitle || rawPageData.title
+    const rawPageData = await fetchMatchingPage(slug)
+    const customTitle = typeof sParams?.title === "string" ? sParams.title : (typeof sParams?.q === "string" ? sParams.q : null)
+    const displayTitle = customTitle || rawPageData.title
 
-  const pageData = {
-    ...rawPageData,
-    title: displayTitle,
-  }
-
-  const pathStr = Array.isArray(slug) ? slug.join("/") : slug
-  const absoluteImageUrl = getAbsoluteImageUrl(pageData.modalImage, baseUrl)
-
-  // JSON-LD Structured Data for Search Engine Rich Snippets
-  const jsonLd = {
-    "@context": "https://schema.org",
-    "@type": "VideoObject",
-    "name": displayTitle,
-    "description": `Watch ${displayTitle} live stream online in HD.`,
-    "thumbnailUrl": absoluteImageUrl || `${baseUrl}/movie_collage_preview.png`,
-    "uploadDate": pageData.createdAt ? new Date(pageData.createdAt).toISOString() : new Date().toISOString(),
-    "embedUrl": `${baseUrl}/${pathStr}`,
-    "interactionStatistic": {
-      "@type": "InteractionCounter",
-      "interactionType": { "@type": "WatchAction" },
-      "userInteractionCount": 12450
+    const pageData = {
+      ...rawPageData,
+      title: displayTitle,
     }
-  }
 
-  return (
-    <>
-      {/* Dynamic SEO Structured Data */}
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+    const pathStr = Array.isArray(slug) ? slug.join("/") : slug
+    const absoluteImageUrl = getAbsoluteImageUrl(pageData.modalImage, baseUrl)
+
+    // JSON-LD Structured Data for Search Engine Rich Snippets
+    const jsonLd = {
+      "@context": "https://schema.org",
+      "@type": "VideoObject",
+      "name": displayTitle,
+      "description": `Watch ${displayTitle} live stream online in HD.`,
+      "thumbnailUrl": absoluteImageUrl || `${baseUrl}/movie_collage_preview.png`,
+      "uploadDate": pageData.createdAt ? new Date(pageData.createdAt).toISOString() : new Date().toISOString(),
+      "embedUrl": `${baseUrl}/${pathStr}`,
+      "interactionStatistic": {
+        "@type": "InteractionCounter",
+        "interactionType": { "@type": "WatchAction" },
+        "userInteractionCount": 12450
+      }
+    }
+
+    return (
+      <>
+        {/* Dynamic SEO Structured Data */}
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        />
+        <LandingPageClient pageData={pageData} />
+      </>
+    )
+  } catch (err) {
+    console.error("Error rendering LandingPage:", err)
+    return (
+      <LandingPageClient
+        pageData={{
+          id: 1,
+          title: "Live Streaming Online",
+          slug: "",
+          headerAdsScript: null,
+          topAdsScript: null,
+          modalImage: null,
+          modalReferralLink: null,
+          redirectTime: 5,
+          playButtonDelay: "0",
+          redirectUrl: null,
+          footerAdsScript: null,
+          playerAdsScript: null,
+          mobileStickyAdsScript: null,
+        }}
       />
-      <LandingPageClient pageData={pageData} />
-    </>
-  )
+    )
+  }
 }

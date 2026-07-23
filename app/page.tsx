@@ -4,6 +4,9 @@ import { eq, desc } from "drizzle-orm"
 import LandingPageClient from "./[...slug]/landing-client"
 import { Metadata } from "next"
 
+export const dynamic = "force-dynamic"
+export const revalidate = 0
+
 export async function generateMetadata(): Promise<Metadata> {
   try {
     const query = db.select().from(pages).where(eq(pages.slug, "home")).limit(1)
