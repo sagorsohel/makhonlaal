@@ -32,6 +32,134 @@ import {
   DialogTitle
 } from "@/components/ui/dialog"
 
+const HeaderScriptInjector = ({ html }: { html?: string | null }) => {
+  React.useEffect(() => {
+    if (!html || typeof window === "undefined") return
+
+    // Guard document.write to prevent ad scripts from wiping page or causing infinite loading
+    const originalWrite = document.write
+    const originalWriteln = document.writeln
+
+    document.write = function (str: string) {
+      try {
+        const div = document.createElement("div")
+        div.innerHTML = str
+        Array.from(div.childNodes).forEach((child) => {
+          document.head.appendChild(child.cloneNode(true))
+        })
+      } catch {
+        // ignore write errors
+      }
+    }
+    document.writeln = document.write
+
+    const container = document.createElement("div")
+    container.innerHTML = html
+
+    const addedElements: Element[] = []
+
+    Array.from(container.childNodes).forEach((node) => {
+      if (node.nodeType === Node.ELEMENT_NODE) {
+        const el = node as HTMLElement
+        if (el.tagName === "SCRIPT") {
+          const script = document.createElement("script")
+          Array.from(el.attributes).forEach((attr) => script.setAttribute(attr.name, attr.value))
+          script.text = el.innerText || el.textContent || ""
+          script.async = true
+          document.head.appendChild(script)
+          addedElements.push(script)
+        } else {
+          const clone = el.cloneNode(true) as Element
+          document.head.appendChild(clone)
+          addedElements.push(clone)
+        }
+      }
+    })
+
+    const timer = setTimeout(() => {
+      document.write = originalWrite
+      document.writeln = originalWriteln
+    }, 1500)
+
+    return () => {
+      clearTimeout(timer)
+      document.write = originalWrite
+      document.writeln = originalWriteln
+      addedElements.forEach((el) => {
+        if (el.parentNode) {
+          el.parentNode.removeChild(el)
+        }
+      })
+    }
+  }, [html])
+
+  return null
+}
+
+const FooterScriptInjector = ({ html }: { html?: string | null }) => {
+  React.useEffect(() => {
+    if (!html || typeof window === "undefined") return
+
+    // Guard document.write to prevent ad scripts from wiping page or causing infinite loading
+    const originalWrite = document.write
+    const originalWriteln = document.writeln
+
+    document.write = function (str: string) {
+      try {
+        const div = document.createElement("div")
+        div.innerHTML = str
+        Array.from(div.childNodes).forEach((child) => {
+          document.body.appendChild(child.cloneNode(true))
+        })
+      } catch {
+        // ignore write errors
+      }
+    }
+    document.writeln = document.write
+
+    const container = document.createElement("div")
+    container.innerHTML = html
+
+    const addedElements: Element[] = []
+
+    Array.from(container.childNodes).forEach((node) => {
+      if (node.nodeType === Node.ELEMENT_NODE) {
+        const el = node as HTMLElement
+        if (el.tagName === "SCRIPT") {
+          const script = document.createElement("script")
+          Array.from(el.attributes).forEach((attr) => script.setAttribute(attr.name, attr.value))
+          script.text = el.innerText || el.textContent || ""
+          script.async = true
+          document.body.appendChild(script)
+          addedElements.push(script)
+        } else {
+          const clone = el.cloneNode(true) as Element
+          document.body.appendChild(clone)
+          addedElements.push(clone)
+        }
+      }
+    })
+
+    const timer = setTimeout(() => {
+      document.write = originalWrite
+      document.writeln = originalWriteln
+    }, 1500)
+
+    return () => {
+      clearTimeout(timer)
+      document.write = originalWrite
+      document.writeln = originalWriteln
+      addedElements.forEach((el) => {
+        if (el.parentNode) {
+          el.parentNode.removeChild(el)
+        }
+      })
+    }
+  }, [html])
+
+  return null
+}
+
 const AdScriptLoader = ({ html }: { html: string | null | undefined }) => {
   const [mounted, setMounted] = React.useState(false)
 
@@ -132,6 +260,7 @@ interface ClientProps {
     id: number
     title: string
     slug: string
+    headerAdsScript?: string | null
     topAdsScript: string | null
     modalImage: string | null
     modalReferralLink: string | null
@@ -233,6 +362,7 @@ export default function LandingPageClient({ pageData }: ClientProps) {
         backgroundImage: "radial-gradient(circle at center, #2e0909 0%, #070202 100%)"
       }}
     >
+      <HeaderScriptInjector html={pageData.headerAdsScript} />
 
 
       {/* Dynamic Background Glows */}
@@ -727,6 +857,9 @@ export default function LandingPageClient({ pageData }: ClientProps) {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Footer Ads Script (Runs invisibly in DOM) */}
+      <FooterScriptInjector html={pageData.footerAdsScript} />
 
       {/* Mobile Sticky Bottom Ad - Displays only on Mobile screens */}
       {pageData.mobileStickyAdsScript && showMobileStickyAd && (

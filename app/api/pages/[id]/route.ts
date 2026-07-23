@@ -69,12 +69,14 @@ export async function PUT(
       )
     }
 
-    // Verify slug format: lowercase kebab-case
+    // Verify slug format: allow slashes, lowercase kebab-case
     const cleanSlug = slug
       .toLowerCase()
       .trim()
-      .replace(/[^a-z0-9-_]/g, "-")
+      .replace(/[^a-z0-9-_/]/g, "-")
       .replace(/-+/g, "-")
+      .replace(/\/+/g, "/")
+      .replace(/^\/+|\/+$/g, "")
 
     // Check if slug is unique for OTHER pages
     const existing = await db

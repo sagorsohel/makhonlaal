@@ -154,10 +154,6 @@ export default async function LandingPage({ params, searchParams }: PageProps) {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
-      {/* Header scripts injection */}
-      {pageData.headerAdsScript && (
-        <head dangerouslySetInnerHTML={{ __html: pageData.headerAdsScript }} />
-      )}
       <LandingPageClient pageData={pageData} />
     </>
   )

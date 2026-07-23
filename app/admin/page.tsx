@@ -127,9 +127,10 @@ export default function AdminPage() {
     return text
       .toLowerCase()
       .trim()
-      .replace(/[^a-z0-9\s-]/g, "")
+      .replace(/[^a-z0-9\s\/-]/g, "")
       .replace(/\s+/g, "-")
       .replace(/-+/g, "-")
+      .replace(/\/+/g, "/")
   }
 
   // Handle Title input changes to trigger auto-slug fill
@@ -308,7 +309,8 @@ export default function AdminPage() {
 
   // Copy URL to Clipboard
   const handleCopyLink = (pageSlug: string, id: number) => {
-    const pageUrl = `${window.location.origin}/${pageSlug}`
+    const cleanPath = pageSlug.startsWith("/") ? pageSlug : `/${pageSlug}`
+    const pageUrl = `${window.location.origin}${cleanPath}`
     navigator.clipboard.writeText(pageUrl).then(() => {
       setCopiedId(id)
       setTimeout(() => {
@@ -402,7 +404,7 @@ export default function AdminPage() {
             </thead>
             <tbody className="divide-y divide-zinc-100">
               {pages.map((page) => {
-                const displayLink = `/${page.slug}`
+                const displayLink = page.slug.startsWith("/") ? page.slug : `/${page.slug}`
 
                 return (
                   <tr key={page.id} className="hover:bg-zinc-50/50 transition-colors">
