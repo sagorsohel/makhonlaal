@@ -126,6 +126,20 @@ async function initializeDatabase() {
       )
       console.log("Admin user seeded successfully!")
     }
+
+    // 4. Seed default home page if missing
+    const [pageRows] = await connection.execute(
+      "SELECT id FROM pages WHERE slug = 'home'"
+    )
+
+    if ((pageRows as any[]).length === 0) {
+      console.log("Seeding default home page...")
+      await connection.execute(
+        `INSERT INTO pages (title, slug, redirect_time, play_button_delay) 
+         VALUES ('Default Home Stream', 'home', 5, '0')`
+      )
+      console.log("Default home page seeded successfully!")
+    }
   } catch (err) {
     console.error("Database auto-initialization failed:", err)
   } finally {

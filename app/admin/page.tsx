@@ -420,9 +420,15 @@ export default function AdminPage() {
                           <span className="font-extrabold text-sm text-zinc-800 hover:text-[#006f53] transition-colors">
                             {page.title}
                           </span>
-                          <span className="text-[9px] font-extrabold px-1.5 py-0.5 rounded-full border border-cyan-100 bg-cyan-50 text-cyan-600 uppercase tracking-wider">
-                            Upcoming
-                          </span>
+                          {page.slug === "home" ? (
+                            <span className="text-[9px] font-black px-2 py-0.5 rounded-full border border-emerald-300 bg-emerald-100 text-emerald-800 uppercase tracking-wider">
+                              Default Home Page
+                            </span>
+                          ) : (
+                            <span className="text-[9px] font-extrabold px-1.5 py-0.5 rounded-full border border-cyan-100 bg-cyan-50 text-cyan-600 uppercase tracking-wider">
+                              Upcoming
+                            </span>
+                          )}
                         </div>
                         <span className="text-[10px] text-zinc-400 font-semibold lowercase">
                           slug: {page.slug}

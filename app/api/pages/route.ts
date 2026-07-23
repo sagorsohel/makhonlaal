@@ -32,6 +32,21 @@ export async function GET(request: Request) {
     const limitNum = parseInt(searchParams.get("limit") || "10", 10)
     const offsetNum = (pageNum - 1) * limitNum
 
+    // Ensure default home page exists if missing
+    try {
+      const homeCheck = await db.select({ id: pages.id }).from(pages).where(eq(pages.slug, "home")).limit(1)
+      if (homeCheck.length === 0) {
+        await db.insert(pages).values({
+          title: "Default Home Stream",
+          slug: "home",
+          redirectTime: 5,
+          playButtonDelay: "0",
+        })
+      }
+    } catch {
+      // ignore
+    }
+
     let whereClause = undefined
     if (search.trim()) {
       whereClause = or(
