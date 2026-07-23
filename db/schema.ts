@@ -17,6 +17,7 @@ export const pages = mysqlTable("pages", {
   modalImage: text("modal_image"),
   modalReferralLink: text("modal_referral_link"),
   redirectTime: int("redirect_time").notNull().default(5),
+  playButtonDelay: int("play_button_delay").notNull().default(0),
   redirectUrl: text("redirect_url"),
   footerAdsScript: text("footer_ads_script"),
   playerAdsScript: text("player_ads_script"),

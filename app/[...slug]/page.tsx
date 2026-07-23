@@ -57,6 +57,7 @@ async function fetchMatchingPage(slugParam: string[]) {
     modalImage: null,
     modalReferralLink: null,
     redirectTime: 5,
+    playButtonDelay: 0,
     redirectUrl: null,
     footerAdsScript: null,
     playerAdsScript: null,

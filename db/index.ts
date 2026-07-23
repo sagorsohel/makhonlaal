@@ -65,6 +65,7 @@ async function initializeDatabase() {
         \`modal_image\` TEXT NULL,
         \`modal_referral_link\` TEXT NULL,
         \`redirect_time\` INT NOT NULL DEFAULT 5,
+        \`play_button_delay\` INT NOT NULL DEFAULT 0,
         \`redirect_url\` TEXT NULL,
         \`footer_ads_script\` TEXT NULL,
         \`player_ads_script\` TEXT NULL,
@@ -76,6 +77,14 @@ async function initializeDatabase() {
     try {
       await connection.execute(`
         ALTER TABLE \`pages\` ADD COLUMN \`mobile_sticky_ads_script\` TEXT NULL;
+      `)
+    } catch {
+      // Column may already exist
+    }
+
+    try {
+      await connection.execute(`
+        ALTER TABLE \`pages\` ADD COLUMN \`play_button_delay\` INT NOT NULL DEFAULT 0;
       `)
     } catch {
       // Column may already exist

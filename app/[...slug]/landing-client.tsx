@@ -265,6 +265,7 @@ interface ClientProps {
     modalImage: string | null
     modalReferralLink: string | null
     redirectTime: number
+    playButtonDelay?: number | null
     redirectUrl: string | null
     footerAdsScript: string | null
     playerAdsScript: string | null
@@ -289,6 +290,23 @@ export default function LandingPageClient({ pageData }: ClientProps) {
   const [showMobileStickyAd, setShowMobileStickyAd] = React.useState(true)
 
   const [isMobileView, setIsMobileView] = React.useState(false)
+
+  // Play Button Show Delay
+  const delaySec = pageData.playButtonDelay || 0
+  const [showPlayPill, setShowPlayPill] = React.useState(delaySec === 0)
+
+  React.useEffect(() => {
+    if (delaySec <= 0) {
+      setShowPlayPill(true)
+      return
+    }
+    setShowPlayPill(false)
+    const timer = setTimeout(() => {
+      setShowPlayPill(true)
+    }, delaySec * 1000)
+
+    return () => clearTimeout(timer)
+  }, [delaySec])
 
   React.useEffect(() => {
     const media = window.matchMedia("(max-width: 768px)")
@@ -660,17 +678,17 @@ export default function LandingPageClient({ pageData }: ClientProps) {
           )}
 
           {/* MAIN PLAYER CENTER PILL (when not playing / during countdown) */}
-          {!isPlaying && (
-            <div className="absolute inset-0 flex items-center justify-center z-20">
+          {!isPlaying && showPlayPill && (
+            <div className="absolute inset-0 flex items-center justify-center z-20 px-3">
               <div
-                className="group/pill flex items-center gap-5 rounded-full bg-black/75 px-6 py-3.5 border border-white/10 shadow-2xl backdrop-blur-md transition-all duration-300 hover:bg-black/85 hover:border-red-500/30"
+                className="group/pill flex items-center gap-2.5 sm:gap-5 rounded-full bg-black/80 px-3.5 sm:px-6 py-2 sm:py-3.5 border border-white/10 shadow-2xl backdrop-blur-md transition-all duration-300 hover:bg-black/90 hover:border-red-500/30 max-w-[95%] sm:max-w-none"
               >
-                {/* Left side Image Preview Thumbnail */}
-                <div className="relative overflow-hidden size-11 rounded-full border border-zinc-700 bg-zinc-900 flex items-center justify-center shadow-md">
+                {/* Left side Image Preview Thumbnail (hidden on mobile) */}
+                <div className="relative overflow-hidden size-9 sm:size-11 rounded-full border border-zinc-700 bg-zinc-900 hidden sm:flex items-center justify-center shadow-md shrink-0">
                   {seconds > 0 ? (
-                    <span className="text-sm font-black text-red-500 animate-pulse">{seconds}s</span>
+                    <span className="text-xs sm:text-sm font-black text-red-500 animate-pulse">{seconds}s</span>
                   ) : (
-                    <Film className="size-5 text-red-500/80 group-hover/pill:animate-pulse" />
+                    <Film className="size-4 sm:size-5 text-red-500/80 group-hover/pill:animate-pulse" />
                   )}
                   <div className="absolute inset-0 bg-gradient-to-b from-transparent to-black/60" />
                 </div>
@@ -678,18 +696,18 @@ export default function LandingPageClient({ pageData }: ClientProps) {
                 {/* Center play icon button */}
                 <button
                   onClick={handlePlayClick}
-                  className="flex size-14 items-center justify-center rounded-full bg-red-600 text-white transition-all duration-300 shadow-xl shadow-red-600/30 hover:bg-red-500 hover:scale-110 active:scale-95 cursor-pointer relative"
+                  className="flex size-10 sm:size-14 items-center justify-center rounded-full bg-red-600 text-white transition-all duration-300 shadow-xl shadow-red-600/30 hover:bg-red-500 hover:scale-110 active:scale-95 cursor-pointer relative shrink-0"
                 >
                   <span className="absolute inset-0 rounded-full bg-red-600/30 animate-ping opacity-75 pointer-events-none" />
-                  <Play className="size-6 fill-current translate-x-0.5" />
+                  <Play className="size-4 sm:size-6 fill-current translate-x-0.5" />
                 </button>
 
                 {/* Right side seekbar placeholder/details */}
-                <div className="flex flex-col pr-2 text-left">
-                  <span className="text-xs font-black tracking-wider text-zinc-200 uppercase group-hover/pill:text-white transition-colors">
+                <div className="flex flex-col pr-1 text-left min-w-0">
+                  <span className="text-[10px] sm:text-xs font-black tracking-wider text-zinc-200 uppercase group-hover/pill:text-white transition-colors truncate">
                     {seconds > 0 ? `Loading in ${seconds}s...` : "Click to Play"}
                   </span>
-                  <span className="text-[10px] text-zinc-400 font-semibold uppercase tracking-wide">
+                  <span className="text-[8px] sm:text-[10px] text-zinc-400 font-semibold uppercase tracking-wide truncate max-w-[130px] sm:max-w-xs">
                     {displayTitle} (4K UHD)
                   </span>
                 </div>
@@ -710,10 +728,10 @@ export default function LandingPageClient({ pageData }: ClientProps) {
       </section>
 
       {/* ACTION BUTTONS IN A ROW */}
-      <div className="relative z-20 grid grid-cols-3 gap-2.5 sm:gap-4 w-full max-w-4xl px-2 mt-3">
+      <div className="relative z-20 grid grid-cols-2 sm:grid-cols-3 gap-2.5 sm:gap-4 w-full max-w-4xl px-2 mt-3">
         <Button
           onClick={handlePlayClick}
-          className="w-full h-11 sm:h-12 rounded-xl bg-red-600 hover:bg-red-700 text-white font-black text-xs sm:text-sm uppercase tracking-wider shadow-lg shadow-red-600/30 transition-all duration-300 hover:scale-[1.02] active:scale-95 cursor-pointer flex items-center justify-center gap-1.5 sm:gap-2 border-0"
+          className="col-span-2 sm:col-span-1 w-full h-11 sm:h-12 rounded-xl bg-red-600 hover:bg-red-700 text-white font-black text-xs sm:text-sm uppercase tracking-wider shadow-lg shadow-red-600/30 transition-all duration-300 hover:scale-[1.02] active:scale-95 cursor-pointer flex items-center justify-center gap-1.5 sm:gap-2 border-0"
         >
           <Play className="size-4 fill-current" />
           <span>WATCH NOW</span>
@@ -721,7 +739,7 @@ export default function LandingPageClient({ pageData }: ClientProps) {
 
         <Button
           onClick={handlePlayClick}
-          className="w-full h-11 sm:h-12 rounded-xl bg-zinc-900/90 hover:bg-zinc-800 border border-zinc-700/80 text-zinc-200 hover:text-white font-black text-xs sm:text-sm uppercase tracking-wider shadow-md transition-all duration-300 hover:scale-[1.02] active:scale-95 cursor-pointer flex items-center justify-center gap-1.5 sm:gap-2"
+          className="col-span-1 w-full h-11 sm:h-12 rounded-xl bg-zinc-900/90 hover:bg-zinc-800 border border-zinc-700/80 text-zinc-200 hover:text-white font-black text-xs sm:text-sm uppercase tracking-wider shadow-md transition-all duration-300 hover:scale-[1.02] active:scale-95 cursor-pointer flex items-center justify-center gap-1.5 sm:gap-2"
         >
           <Monitor className="size-4" />
           <span>HD 4K</span>
@@ -729,7 +747,7 @@ export default function LandingPageClient({ pageData }: ClientProps) {
 
         <Button
           onClick={handlePlayClick}
-          className="w-full h-11 sm:h-12 rounded-xl bg-zinc-900/90 hover:bg-zinc-800 border border-zinc-700/80 text-zinc-200 hover:text-white font-black text-xs sm:text-sm uppercase tracking-wider shadow-md transition-all duration-300 hover:scale-[1.02] active:scale-95 cursor-pointer flex items-center justify-center gap-1.5 sm:gap-2"
+          className="col-span-1 w-full h-11 sm:h-12 rounded-xl bg-zinc-900/90 hover:bg-zinc-800 border border-zinc-700/80 text-zinc-200 hover:text-white font-black text-xs sm:text-sm uppercase tracking-wider shadow-md transition-all duration-300 hover:scale-[1.02] active:scale-95 cursor-pointer flex items-center justify-center gap-1.5 sm:gap-2"
         >
           <Download className="size-4 animate-bounce" />
           <span>DOWNLOAD</span>

@@ -45,6 +45,7 @@ interface PageData {
   modalImage: string | null
   modalReferralLink: string | null
   redirectTime: number
+  playButtonDelay: number | null
   redirectUrl: string | null
   footerAdsScript: string | null
   playerAdsScript: string | null
@@ -76,6 +77,7 @@ export default function AdminPage() {
   const [isUploading, setIsUploading] = React.useState(false)
   const [modalReferralLink, setModalReferralLink] = React.useState("")
   const [redirectTime, setRedirectTime] = React.useState(5)
+  const [playButtonDelay, setPlayButtonDelay] = React.useState(0)
   const [redirectUrl, setRedirectUrl] = React.useState("")
   const [footerAdsScript, setFooterAdsScript] = React.useState("")
   const [playerAdsScript, setPlayerAdsScript] = React.useState("")
@@ -197,6 +199,7 @@ export default function AdminPage() {
     setModalImage("")
     setModalReferralLink("")
     setRedirectTime(5)
+    setPlayButtonDelay(0)
     setRedirectUrl("")
     setFooterAdsScript("")
     setPlayerAdsScript("")
@@ -217,6 +220,7 @@ export default function AdminPage() {
     setModalImage(page.modalImage || "")
     setModalReferralLink(page.modalReferralLink || "")
     setRedirectTime(page.redirectTime)
+    setPlayButtonDelay(page.playButtonDelay || 0)
     setRedirectUrl(page.redirectUrl || "")
     setFooterAdsScript(page.footerAdsScript || "")
     setPlayerAdsScript(page.playerAdsScript || "")
@@ -253,6 +257,7 @@ export default function AdminPage() {
         modalImage,
         modalReferralLink,
         redirectTime,
+        playButtonDelay,
         redirectUrl,
         footerAdsScript,
         playerAdsScript,
@@ -620,8 +625,8 @@ export default function AdminPage() {
                 </div>
               </div>
 
-              {/* Split layout: Redirect configs */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* Split layout: Redirect & Delay configs */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="flex flex-col gap-1.5">
                   <label className="text-[10px] font-black uppercase text-zinc-400 tracking-wider">Redirect Time (seconds) *</label>
                   <Input
@@ -630,6 +635,18 @@ export default function AdminPage() {
                     required
                     value={redirectTime}
                     onChange={(e) => setRedirectTime(Number(e.target.value))}
+                    className="h-10 border border-zinc-200 focus-visible:border-[#006f53] focus-visible:ring-[#006f53]/10 text-xs rounded-lg"
+                  />
+                </div>
+
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-[10px] font-black uppercase text-zinc-400 tracking-wider">Play Button Show Delay (sec)</label>
+                  <Input
+                    type="number"
+                    min="0"
+                    placeholder="0 (Instant)"
+                    value={playButtonDelay}
+                    onChange={(e) => setPlayButtonDelay(Number(e.target.value))}
                     className="h-10 border border-zinc-200 focus-visible:border-[#006f53] focus-visible:ring-[#006f53]/10 text-xs rounded-lg"
                   />
                 </div>
