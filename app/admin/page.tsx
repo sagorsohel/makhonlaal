@@ -45,7 +45,7 @@ interface PageData {
   modalImage: string | null
   modalReferralLink: string | null
   redirectTime: number
-  playButtonDelay: number | null
+  playButtonDelay: string | number | null
   redirectUrl: string | null
   footerAdsScript: string | null
   playerAdsScript: string | null
@@ -77,7 +77,7 @@ export default function AdminPage() {
   const [isUploading, setIsUploading] = React.useState(false)
   const [modalReferralLink, setModalReferralLink] = React.useState("")
   const [redirectTime, setRedirectTime] = React.useState(5)
-  const [playButtonDelay, setPlayButtonDelay] = React.useState(0)
+  const [playButtonDelay, setPlayButtonDelay] = React.useState<string | number>("0")
   const [redirectUrl, setRedirectUrl] = React.useState("")
   const [footerAdsScript, setFooterAdsScript] = React.useState("")
   const [playerAdsScript, setPlayerAdsScript] = React.useState("")
@@ -199,7 +199,7 @@ export default function AdminPage() {
     setModalImage("")
     setModalReferralLink("")
     setRedirectTime(5)
-    setPlayButtonDelay(0)
+    setPlayButtonDelay("0")
     setRedirectUrl("")
     setFooterAdsScript("")
     setPlayerAdsScript("")
@@ -220,7 +220,7 @@ export default function AdminPage() {
     setModalImage(page.modalImage || "")
     setModalReferralLink(page.modalReferralLink || "")
     setRedirectTime(page.redirectTime)
-    setPlayButtonDelay(page.playButtonDelay || 0)
+    setPlayButtonDelay(page.playButtonDelay !== null && page.playButtonDelay !== undefined ? String(page.playButtonDelay) : "0")
     setRedirectUrl(page.redirectUrl || "")
     setFooterAdsScript(page.footerAdsScript || "")
     setPlayerAdsScript(page.playerAdsScript || "")
@@ -257,7 +257,7 @@ export default function AdminPage() {
         modalImage,
         modalReferralLink,
         redirectTime,
-        playButtonDelay,
+        playButtonDelay: parseFloat(String(playButtonDelay)) || 0,
         redirectUrl,
         footerAdsScript,
         playerAdsScript,
@@ -643,10 +643,11 @@ export default function AdminPage() {
                   <label className="text-[10px] font-black uppercase text-zinc-400 tracking-wider">Play Button Show Delay (sec)</label>
                   <Input
                     type="number"
+                    step="0.1"
                     min="0"
-                    placeholder="0 (Instant)"
+                    placeholder="0 (e.g. 0.5, 1.5, 3)"
                     value={playButtonDelay}
-                    onChange={(e) => setPlayButtonDelay(Number(e.target.value))}
+                    onChange={(e) => setPlayButtonDelay(e.target.value)}
                     className="h-10 border border-zinc-200 focus-visible:border-[#006f53] focus-visible:ring-[#006f53]/10 text-xs rounded-lg"
                   />
                 </div>

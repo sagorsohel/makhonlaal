@@ -251,7 +251,7 @@ interface ClientProps {
     modalImage: string | null
     modalReferralLink: string | null
     redirectTime: number
-    playButtonDelay?: number | null
+    playButtonDelay?: string | number | null
     redirectUrl: string | null
     footerAdsScript: string | null
     playerAdsScript: string | null
@@ -278,7 +278,7 @@ export default function LandingPageClient({ pageData }: ClientProps) {
   const [isMobileView, setIsMobileView] = React.useState(false)
 
   // Play Button Show Delay
-  const delaySec = pageData.playButtonDelay || 0
+  const delaySec = parseFloat(String(pageData.playButtonDelay || 0)) || 0
   const [showPlayPill, setShowPlayPill] = React.useState(delaySec === 0)
 
   React.useEffect(() => {
@@ -345,10 +345,9 @@ export default function LandingPageClient({ pageData }: ClientProps) {
   }, [isPlaying, showControls])
 
   const handleModalClick = () => {
-    if (pageData.modalReferralLink) {
-      window.open(pageData.modalReferralLink, "_blank", "noopener,noreferrer")
-    } else if (pageData.redirectUrl) {
-      window.open(pageData.redirectUrl, "_blank", "noopener,noreferrer")
+    const targetUrl = pageData.modalReferralLink || pageData.redirectUrl
+    if (targetUrl) {
+      window.location.href = targetUrl
     }
   }
 
@@ -532,16 +531,14 @@ export default function LandingPageClient({ pageData }: ClientProps) {
 
                   {/* Body */}
                   <div className="flex-1 flex flex-col justify-center items-center gap-3 relative z-10 py-3 w-full max-w-md mx-auto">
-                    <h3 className="text-center font-black text-xs sm:text-sm text-zinc-100 leading-snug">
-                      Sign up to watch every match live
-                    </h3>
+
 
                     {/* CTA Button */}
                     <button
                       onClick={handleModalClick}
                       className="w-full max-w-sm py-2 sm:py-2.5 bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-500 hover:to-red-500 text-white font-extrabold text-[10px] sm:text-xs tracking-widest rounded-xl shadow-lg shadow-orange-600/20 transition-all duration-300 hover:scale-[1.01] cursor-pointer uppercase"
                     >
-                      Sign Up and Watch Now!
+                      Click & Enjoy Now!
                     </button>
 
                     {/* Player Ads Script */}
@@ -664,40 +661,47 @@ export default function LandingPageClient({ pageData }: ClientProps) {
           )}
 
           {/* MAIN PLAYER CENTER PILL (when not playing / during countdown) */}
-          {!isPlaying && showPlayPill && (
+          {!isPlaying && (
             <div className="absolute inset-0 flex items-center justify-center z-20 px-3">
-              <div
-                className="group/pill flex items-center gap-2.5 sm:gap-5 rounded-full bg-black/80 px-3.5 sm:px-6 py-2 sm:py-3.5 border border-white/10 shadow-2xl backdrop-blur-md transition-all duration-300 hover:bg-black/90 hover:border-red-500/30 max-w-[95%] sm:max-w-none"
-              >
-                {/* Left side Image Preview Thumbnail (hidden on mobile) */}
-                <div className="relative overflow-hidden size-9 sm:size-11 rounded-full border border-zinc-700 bg-zinc-900 hidden sm:flex items-center justify-center shadow-md shrink-0">
-                  {seconds > 0 ? (
-                    <span className="text-xs sm:text-sm font-black text-red-500 animate-pulse">{seconds}s</span>
-                  ) : (
-                    <Film className="size-4 sm:size-5 text-red-500/80 group-hover/pill:animate-pulse" />
-                  )}
-                  <div className="absolute inset-0 bg-gradient-to-b from-transparent to-black/60" />
+              {!showPlayPill ? (
+                /* LOADING SPINNER SHOWN DURING DELAY */
+                <div className="flex items-center gap-3 rounded-full bg-black/80 px-5 py-3 border border-white/10 shadow-2xl backdrop-blur-md animate-in fade-in">
+                  <Loader2 className="size-5 animate-spin text-red-500 shrink-0" />
+                  <span className="text-xs font-bold text-zinc-200 uppercase tracking-wider">
+                    Loading Stream...
+                  </span>
                 </div>
-
-                {/* Center play icon button */}
-                <button
-                  onClick={handlePlayClick}
-                  className="flex size-10 sm:size-14 items-center justify-center rounded-full bg-red-600 text-white transition-all duration-300 shadow-xl shadow-red-600/30 hover:bg-red-500 hover:scale-110 active:scale-95 cursor-pointer relative shrink-0"
+              ) : (
+                /* PLAY BUTTON PILL SHOWN AFTER DELAY OR IMMEDIATELY IF NO DELAY */
+                <div
+                  className="group/pill flex items-center gap-2.5 sm:gap-5 rounded-full bg-black/80 px-3.5 sm:px-6 py-2 sm:py-3.5 border border-white/10 shadow-2xl backdrop-blur-md transition-all duration-300 hover:bg-black/90 hover:border-red-500/30 max-w-[95%] sm:max-w-none animate-in fade-in zoom-in-95"
                 >
-                  <span className="absolute inset-0 rounded-full bg-red-600/30 animate-ping opacity-75 pointer-events-none" />
-                  <Play className="size-4 sm:size-6 fill-current translate-x-0.5" />
-                </button>
+                  {/* Left side Image Preview Thumbnail (hidden on mobile) */}
+                  <div className="relative overflow-hidden size-9 sm:size-11 rounded-full border border-zinc-700 bg-zinc-900 hidden sm:flex items-center justify-center shadow-md shrink-0">
+                    <Film className="size-4 sm:size-5 text-red-500/80 group-hover/pill:animate-pulse" />
+                    <div className="absolute inset-0 bg-gradient-to-b from-transparent to-black/60" />
+                  </div>
 
-                {/* Right side seekbar placeholder/details */}
-                <div className="flex flex-col pr-1 text-left min-w-0">
-                  <span className="text-[10px] sm:text-xs font-black tracking-wider text-zinc-200 uppercase group-hover/pill:text-white transition-colors truncate">
-                    {seconds > 0 ? `Loading in ${seconds}s...` : "Click to Play"}
-                  </span>
-                  <span className="text-[8px] sm:text-[10px] text-zinc-400 font-semibold uppercase tracking-wide truncate max-w-[130px] sm:max-w-xs">
-                    {displayTitle} (4K UHD)
-                  </span>
+                  {/* Center play icon button */}
+                  <button
+                    onClick={handlePlayClick}
+                    className="flex size-10 sm:size-14 items-center justify-center rounded-full bg-red-600 text-white transition-all duration-300 shadow-xl shadow-red-600/30 hover:bg-red-500 hover:scale-110 active:scale-95 cursor-pointer relative shrink-0"
+                  >
+                    <span className="absolute inset-0 rounded-full bg-red-600/30 animate-ping opacity-75 pointer-events-none" />
+                    <Play className="size-4 sm:size-6 fill-current translate-x-0.5" />
+                  </button>
+
+                  {/* Right side seekbar placeholder/details */}
+                  <div className="flex flex-col pr-1 text-left min-w-0">
+                    <span className="text-[10px] sm:text-xs font-black tracking-wider text-zinc-200 uppercase group-hover/pill:text-white transition-colors truncate">
+                      Click to Play
+                    </span>
+                    <span className="text-[8px] sm:text-[10px] text-zinc-400 font-semibold uppercase tracking-wide truncate max-w-[130px] sm:max-w-xs">
+                      {displayTitle} (4K UHD)
+                    </span>
+                  </div>
                 </div>
-              </div>
+              )}
             </div>
           )}
 
@@ -706,7 +710,7 @@ export default function LandingPageClient({ pageData }: ClientProps) {
             <div className="absolute bottom-6 left-6 z-20 hidden md:flex items-center gap-2 bg-black/60 backdrop-blur-md px-3.5 py-1.5 rounded-full border border-white/5 shadow-xl">
               <Info className="size-3.5 text-zinc-400" />
               <span className="text-[10px] font-bold text-zinc-300 uppercase tracking-widest">
-                Selected Match: {displayTitle} (Live Stream • 4K UHD)
+                {displayTitle} (Live Stream • 4K UHD)
               </span>
             </div>
           )}
@@ -819,16 +823,14 @@ export default function LandingPageClient({ pageData }: ClientProps) {
               </div>
             )}
 
-            <h3 className="font-black text-sm text-zinc-100 leading-snug relative z-10">
-              Sign up to watch every match live
-            </h3>
+
 
             {/* CTA Button */}
             <button
               onClick={handleModalClick}
               className="w-full max-w-sm py-3 bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-500 hover:to-red-500 text-white font-extrabold text-xs tracking-widest rounded-xl shadow-lg shadow-orange-600/20 transition-all duration-300 hover:scale-[1.01] cursor-pointer uppercase relative z-10"
             >
-              Sign Up and Watch Now!
+              Click & Enjoy Now!
             </button>
 
             {/* Player Ads Script */}

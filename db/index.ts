@@ -8,39 +8,50 @@ if (typeof dns.setDefaultResultOrder === "function") {
   dns.setDefaultResultOrder("ipv4first")
 }
 
-
 const dbHost = process.env.DB_HOST || "localhost"
 const dbPort = process.env.DB_PORT || "3306"
 const dbUser = process.env.DB_USER || "root"
 const dbPassword = process.env.DB_PASSWORD || ""
 const dbName = process.env.DB_NAME || "makhonlaal"
 
-// Reconstruct standard database URL if needed for compatibility (e.g. dynamic page data collection / seeds)
 if (!process.env.DATABASE_URL) {
   const encodedPassword = encodeURIComponent(dbPassword)
   process.env.DATABASE_URL = `mysql://${dbUser}:${encodedPassword}@${dbHost}:${dbPort}/${dbName}`
 }
 
+declare global {
+  var _mysqlPool: mysql.Pool | undefined
+  var _dbInitialized: boolean | undefined
+}
+
 let poolConnection: mysql.Pool
 
-try {
+if (globalThis._mysqlPool) {
+  poolConnection = globalThis._mysqlPool
+} else {
   poolConnection = mysql.createPool({
     host: dbHost,
     port: parseInt(dbPort),
     user: dbUser,
     password: dbPassword,
     database: dbName,
+    waitForConnections: true,
+    connectionLimit: 10,
+    queueLimit: 0,
   })
-} catch (err) {
-  poolConnection = mysql.createPool(process.env.DATABASE_URL!)
+  globalThis._mysqlPool = poolConnection
 }
 
 export const db = drizzle(poolConnection, { schema, mode: "default" })
 
-// Auto-run schema push and admin seeding
 async function initializeDatabase() {
+  if (globalThis._dbInitialized) return
+  globalThis._dbInitialized = true
+
+  let connection: mysql.PoolConnection | null = null
+
   try {
-    const connection = await poolConnection.getConnection()
+    connection = await poolConnection.getConnection()
     console.log("Database connected. Running auto-initialization...")
 
     // 1. Create users table
@@ -65,7 +76,7 @@ async function initializeDatabase() {
         \`modal_image\` TEXT NULL,
         \`modal_referral_link\` TEXT NULL,
         \`redirect_time\` INT NOT NULL DEFAULT 5,
-        \`play_button_delay\` INT NOT NULL DEFAULT 0,
+        \`play_button_delay\` VARCHAR(50) NOT NULL DEFAULT '0',
         \`redirect_url\` TEXT NULL,
         \`footer_ads_script\` TEXT NULL,
         \`player_ads_script\` TEXT NULL,
@@ -84,10 +95,16 @@ async function initializeDatabase() {
 
     try {
       await connection.execute(`
-        ALTER TABLE \`pages\` ADD COLUMN \`play_button_delay\` INT NOT NULL DEFAULT 0;
+        ALTER TABLE \`pages\` ADD COLUMN \`play_button_delay\` VARCHAR(50) NOT NULL DEFAULT '0';
       `)
     } catch {
-      // Column may already exist
+      try {
+        await connection.execute(`
+          ALTER TABLE \`pages\` MODIFY COLUMN \`play_button_delay\` VARCHAR(50) NOT NULL DEFAULT '0';
+        `)
+      } catch {
+        // ignore
+      }
     }
 
     // 3. Seed admin user
@@ -108,12 +125,14 @@ async function initializeDatabase() {
       )
       console.log("Admin user seeded successfully!")
     }
-
-    connection.release()
   } catch (err) {
     console.error("Database auto-initialization failed:", err)
+  } finally {
+    if (connection) {
+      connection.release()
+    }
   }
 }
 
-// Trigger initialization in background on import
+// Trigger initialization once in background
 initializeDatabase()

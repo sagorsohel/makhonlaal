@@ -102,7 +102,7 @@ export async function PUT(
         modalImage: modalImage || null,
         modalReferralLink: modalReferralLink || null,
         redirectTime: redirectTime !== undefined ? Number(redirectTime) : 5,
-        playButtonDelay: playButtonDelay !== undefined ? Number(playButtonDelay) : 0,
+        playButtonDelay: playButtonDelay !== undefined ? String(playButtonDelay) : "0",
         redirectUrl: redirectUrl || null,
         footerAdsScript: footerAdsScript || null,
         playerAdsScript: playerAdsScript || null,
