@@ -755,7 +755,7 @@ export default function LandingPageClient({ pageData }: ClientProps) {
       </div>
 
       {/* Dynamic Details Drawer for Cinematic Info */}
-      <section className="relative z-10 w-full max-w-2xl mt-12 bg-black/40 border border-zinc-800/60 rounded-3xl p-6 backdrop-blur-sm flex flex-col md:flex-row gap-6 items-start shadow-xl">
+      <section className="relative z-10 w-full max-w-2xl mt-5 bg-black/40 border border-zinc-800/60 rounded-3xl p-6 backdrop-blur-sm flex flex-col md:flex-row gap-6 items-start shadow-xl">
         <div className="flex-1">
           <div className="flex items-center gap-2">
             <span className="text-[10px] font-extrabold uppercase bg-red-600/20 text-red-500 border border-red-500/20 px-2 py-0.5 rounded-full">
