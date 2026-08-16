@@ -162,15 +162,6 @@ export default function LoginPage() {
           </form>
         </div>
 
-        {/* Demo info hint */}
-        <div className="mt-6 text-center select-none bg-zinc-950/40 border border-zinc-900/60 rounded-2xl p-4 backdrop-blur-sm">
-          <p className="text-[10px] text-zinc-500 font-semibold uppercase tracking-wider">
-            Demo Credentials
-          </p>
-          <p className="text-xs text-zinc-400 mt-1">
-            Email: <span className="font-mono text-zinc-200">admin@gmail.com</span> • Pass: <span className="font-mono text-zinc-200">sohoj@sohoj</span>
-          </p>
-        </div>
       </div>
     </main>
   )
