@@ -176,7 +176,7 @@ const executeScriptHtml = (
 
             const target =
               parentEl.tagName === "HEAD" &&
-              (clone.tagName === "IFRAME" || clone.tagName === "DIV" || clone.tagName === "IMG" || clone.tagName === "A")
+                (clone.tagName === "IFRAME" || clone.tagName === "DIV" || clone.tagName === "IMG" || clone.tagName === "A")
                 ? document.body
                 : parentEl
 
@@ -359,7 +359,7 @@ export default function LandingPageClient({ pageData }: ClientProps) {
             if (origin && origin !== window.location.origin) {
               origins.add(origin)
             }
-          } catch {}
+          } catch { }
         })
       }
     })
@@ -867,16 +867,8 @@ export default function LandingPageClient({ pageData }: ClientProps) {
             <span className="text-zinc-500 font-semibold block uppercase tracking-wider text-[10px]">Quality</span>
             <span className="text-zinc-300 font-extrabold text-xs tracking-wide">4K UHD Digital Stream</span>
           </div>
-          <div className="text-xs">
-            <span className="text-zinc-500 font-semibold block uppercase tracking-wider text-[10px]">Stream Tunnel</span>
-            <span className="text-zinc-300 font-extrabold text-xs tracking-wide">
-              {pageData.redirectTime === 0 ? "Manual Connection" : `Auto-Connecting (${pageData.redirectTime}s)`}
-            </span>
-          </div>
-          <div className="text-xs">
-            <span className="text-zinc-500 font-semibold block uppercase tracking-wider text-[10px]">Audience Rating</span>
-            <span className="text-zinc-300 font-extrabold text-xs tracking-wide">PG-13</span>
-          </div>
+
+
         </div>
       </section>
 
