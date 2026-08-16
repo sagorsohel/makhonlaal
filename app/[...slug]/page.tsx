@@ -70,8 +70,7 @@ const fetchMatchingPage = cache(async (slugParam: string[]) => {
       return results[0] || null
     })()
 
-    const timeoutPromise = new Promise<null>((resolve) => setTimeout(() => resolve(null), 800))
-    const matchedPage = await Promise.race([dbQueryPromise, timeoutPromise])
+    const matchedPage = await dbQueryPromise
 
     if (matchedPage) {
       return matchedPage

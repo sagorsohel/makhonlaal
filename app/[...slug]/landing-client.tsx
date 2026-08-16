@@ -32,37 +32,173 @@ import {
   DialogTitle
 } from "@/components/ui/dialog"
 
-const executeScriptHtml = (htmlStr: string, parentEl: HTMLElement): Element[] => {
-  const added: Element[] = []
-  if (!htmlStr || typeof window === "undefined") return added
+if (typeof window !== "undefined") {
+  if (!(window as any).__safeWritePatched) {
+    (window as any).__safeWritePatched = true
+    const origWrite = document.write.bind(document)
+    const origWriteln = document.writeln ? document.writeln.bind(document) : origWrite
 
-  try {
-    const parser = new DOMParser()
-    const doc = parser.parseFromString(htmlStr, "text/html")
+    const safeWrite = function (...args: any[]) {
+      try {
+        if (document.readyState !== "loading") {
+          const htmlStr = args.join("")
+          if (!htmlStr) return
+          const parser = new DOMParser()
+          const doc = parser.parseFromString(htmlStr, "text/html")
+          const container = document.body || document.documentElement
 
-    const processNode = (node: Node) => {
-      if (node.nodeName === "SCRIPT") {
-        const oldScript = node as HTMLScriptElement
-        const newScript = document.createElement("script")
-        Array.from(oldScript.attributes).forEach((attr) => {
-          newScript.setAttribute(attr.name, attr.value)
-        })
-        if (oldScript.src) {
-          newScript.src = oldScript.src
+          Array.from(doc.body.childNodes).forEach((node) => {
+            if (node.nodeName === "SCRIPT") {
+              const s = document.createElement("script")
+              Array.from((node as HTMLScriptElement).attributes).forEach((attr) =>
+                s.setAttribute(attr.name, attr.value)
+              )
+              s.textContent = (node as HTMLScriptElement).textContent || ""
+              container.appendChild(s)
+            } else if (node.nodeType === Node.ELEMENT_NODE) {
+              container.appendChild((node as HTMLElement).cloneNode(true))
+            } else if (node.nodeType === Node.TEXT_NODE && node.textContent?.trim()) {
+              const span = document.createElement("span")
+              span.innerHTML = node.textContent
+              container.appendChild(span)
+            }
+          })
+          return
         }
-        newScript.text = oldScript.text || oldScript.textContent || ""
-        newScript.async = true
-        parentEl.appendChild(newScript)
-        added.push(newScript)
-      } else if (node.nodeType === Node.ELEMENT_NODE) {
-        const clone = (node as HTMLElement).cloneNode(true) as Element
-        parentEl.appendChild(clone)
-        added.push(clone)
+      } catch (e) {
+        console.error("Safe document.write error:", e)
+      }
+      try {
+        origWrite(...args)
+      } catch {
+        // ignore
       }
     }
 
-    Array.from(doc.head.childNodes).forEach(processNode)
-    Array.from(doc.body.childNodes).forEach(processNode)
+    document.write = safeWrite as any
+    if (document.writeln) {
+      document.writeln = safeWrite as any
+    }
+  }
+}
+
+const executeScriptHtml = (
+  htmlStr: string,
+  parentEl: HTMLElement | null,
+  isSilent: boolean = false
+): Element[] => {
+  const added: Element[] = []
+  if (!htmlStr || typeof window === "undefined" || !parentEl) return added
+
+  try {
+    let processedHtml = htmlStr.trim()
+    const atobMatch = processedHtml.match(/document\.write\s*\(\s*atob\s*\(\s*["']([^"']+)["']\s*\)\s*\)/)
+    if (atobMatch && atobMatch[1]) {
+      try {
+        processedHtml = atob(atobMatch[1])
+      } catch (e) {
+        console.error("Failed to decode atob script:", e)
+      }
+    }
+
+    const parser = new DOMParser()
+    const doc = parser.parseFromString(processedHtml, "text/html")
+
+    const createExecutableScript = (oldScript: HTMLScriptElement): HTMLScriptElement => {
+      const newScript = document.createElement("script")
+      Array.from(oldScript.attributes).forEach((attr) => {
+        try {
+          if (attr.name === "src") {
+            const rawSrc = oldScript.getAttribute("src")
+            if (rawSrc) {
+              newScript.setAttribute("src", rawSrc)
+            }
+          } else {
+            newScript.setAttribute(attr.name, attr.value)
+          }
+        } catch {
+          // ignore
+        }
+      })
+
+      let scriptCode = oldScript.text || oldScript.textContent || oldScript.innerHTML || ""
+      if (
+        scriptCode.includes("atOptions") &&
+        !scriptCode.includes("window.atOptions") &&
+        !scriptCode.includes("var atOptions") &&
+        !scriptCode.includes("let atOptions") &&
+        !scriptCode.includes("const atOptions")
+      ) {
+        scriptCode = scriptCode.replace(/\batOptions\s*=/, "window.atOptions =")
+      }
+
+      if (scriptCode) {
+        newScript.textContent = scriptCode
+      }
+
+      if (oldScript.hasAttribute("async")) {
+        newScript.async = oldScript.async
+      }
+      return newScript
+    }
+
+    const processNode = (node: Node) => {
+      try {
+        if (node.nodeName === "SCRIPT") {
+          const scriptEl = createExecutableScript(node as HTMLScriptElement)
+          parentEl.appendChild(scriptEl)
+          added.push(scriptEl)
+        } else if (node.nodeType === Node.ELEMENT_NODE) {
+          const elem = node as HTMLElement
+          if (elem.tagName === "NOSCRIPT") {
+            const noscriptDiv = document.createElement("div")
+            noscriptDiv.style.cssText = "display: none !important; width: 0; height: 0; opacity: 0; visibility: hidden; pointer-events: none;"
+            noscriptDiv.setAttribute("aria-hidden", "true")
+            noscriptDiv.innerHTML = elem.innerHTML || elem.textContent || ""
+            parentEl.appendChild(noscriptDiv)
+            added.push(noscriptDiv)
+          } else {
+            const clone = elem.cloneNode(true) as HTMLElement
+            if (isSilent) {
+              clone.style.cssText += "; display: none !important; width: 0; height: 0; opacity: 0; visibility: hidden; pointer-events: none;"
+              clone.setAttribute("aria-hidden", "true")
+            }
+
+            const nestedScripts = Array.from(clone.querySelectorAll("script"))
+            nestedScripts.forEach((oldS) => {
+              try {
+                const newS = createExecutableScript(oldS as HTMLScriptElement)
+                oldS.parentNode?.replaceChild(newS, oldS)
+              } catch {
+                // ignore
+              }
+            })
+
+            const target =
+              parentEl.tagName === "HEAD" &&
+              (clone.tagName === "IFRAME" || clone.tagName === "DIV" || clone.tagName === "IMG" || clone.tagName === "A")
+                ? document.body
+                : parentEl
+
+            target.appendChild(clone)
+            added.push(clone)
+          }
+        } else if (node.nodeType === Node.TEXT_NODE && node.textContent?.trim()) {
+          if (!isSilent) {
+            const textSpan = document.createElement("span")
+            textSpan.innerHTML = node.textContent
+            const target = parentEl.tagName === "HEAD" ? document.body : parentEl
+            target.appendChild(textSpan)
+            added.push(textSpan)
+          }
+        }
+      } catch (err) {
+        console.error("Error inserting script node:", err)
+      }
+    }
+
+    if (doc.head) Array.from(doc.head.childNodes).forEach(processNode)
+    if (doc.body) Array.from(doc.body.childNodes).forEach(processNode)
   } catch (err) {
     console.error("Failed to parse script html:", err)
   }
@@ -70,176 +206,136 @@ const executeScriptHtml = (htmlStr: string, parentEl: HTMLElement): Element[] =>
   return added
 }
 
-const HeaderScriptInjector = ({ html }: { html?: string | null }) => {
+const HeaderScriptInjector = React.memo(({ html }: { html?: string | null }) => {
   React.useEffect(() => {
-    if (!html || typeof window === "undefined") return
-
-    const originalWrite = document.write
-    const originalWriteln = document.writeln
-
-    document.write = function (str: string) {
-      try {
-        executeScriptHtml(str, document.head)
-      } catch (err) {
-        console.error("Ad document.write error:", err)
-      }
-    }
-    document.writeln = document.write
-
-    const addedElements = executeScriptHtml(html, document.head)
+    if (!html || !html.trim() || typeof window === "undefined" || !document.head) return
 
     const timer = setTimeout(() => {
-      document.write = originalWrite
-      document.writeln = originalWriteln
-    }, 3000)
+      try {
+        executeScriptHtml(html, document.head, true)
+      } catch (err) {
+        console.error("Header script injection error:", err)
+      }
+    }, 50)
 
     return () => {
       clearTimeout(timer)
-      document.write = originalWrite
-      document.writeln = originalWriteln
-      addedElements.forEach((el) => {
-        if (el.parentNode) {
-          el.parentNode.removeChild(el)
-        }
-      })
     }
   }, [html])
 
   return null
-}
+})
+HeaderScriptInjector.displayName = "HeaderScriptInjector"
 
-const FooterScriptInjector = ({ html }: { html?: string | null }) => {
+const FooterScriptInjector = React.memo(({ html }: { html?: string | null }) => {
   React.useEffect(() => {
-    if (!html || typeof window === "undefined") return
-
-    const originalWrite = document.write
-    const originalWriteln = document.writeln
-
-    document.write = function (str: string) {
-      try {
-        executeScriptHtml(str, document.body)
-      } catch (err) {
-        console.error("Footer ad document.write error:", err)
-      }
-    }
-    document.writeln = document.write
-
-    const addedElements = executeScriptHtml(html, document.body)
+    if (!html || !html.trim() || typeof window === "undefined" || !document.body) return
 
     const timer = setTimeout(() => {
-      document.write = originalWrite
-      document.writeln = originalWriteln
-    }, 3000)
+      try {
+        executeScriptHtml(html, document.body, true)
+      } catch (err) {
+        console.error("Footer script injection error:", err)
+      }
+    }, 50)
 
     return () => {
       clearTimeout(timer)
-      document.write = originalWrite
-      document.writeln = originalWriteln
-      addedElements.forEach((el) => {
-        if (el.parentNode) {
-          el.parentNode.removeChild(el)
-        }
-      })
     }
   }, [html])
 
   return null
-}
+})
+FooterScriptInjector.displayName = "FooterScriptInjector"
 
-const AdScriptLoader = ({ html }: { html: string | null | undefined }) => {
-  const [mounted, setMounted] = React.useState(false)
+const AdScriptLoader = React.memo(({ html }: { html: string | null | undefined }) => {
+  const iframeRef = React.useRef<HTMLIFrameElement>(null)
+  const [iframeHeight, setIframeHeight] = React.useState<number>(60)
 
   React.useEffect(() => {
-    const timer = setTimeout(() => {
-      setMounted(true)
-    }, 0)
-    return () => clearTimeout(timer)
+    if (!html || !html.trim() || typeof window === "undefined") return
+
+    const iframe = iframeRef.current
+    if (!iframe) return
+
+    const doc = iframe.contentDocument || iframe.contentWindow?.document
+    if (!doc) return
+
+    const cleanHtml = html.trim()
+
+    const iframeDocHtml = `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      background: transparent;
+      width: 100%;
+      text-align: center;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      overflow: hidden;
+    }
+    img { max-width: 100%; height: auto; }
+    iframe { border: 0; max-width: 100%; }
+    .noscript-content { display: inline-block; }
+  </style>
+</head>
+<body>
+  ${cleanHtml}
+  <script>
+    function postHeight() {
+      try {
+        var h = Math.max(document.body.scrollHeight, document.documentElement.scrollHeight);
+        if (h > 0 && window.parent) {
+          window.parent.postMessage({ type: 'AD_RESIZE', height: h }, '*');
+        }
+      } catch (e) {}
+    }
+    window.addEventListener('load', postHeight);
+    setTimeout(postHeight, 100);
+    setTimeout(postHeight, 400);
+    setTimeout(postHeight, 1000);
+    setTimeout(postHeight, 2500);
+  </script>
+</body>
+</html>`
+
+    doc.open()
+    doc.write(iframeDocHtml)
+    doc.close()
+  }, [html])
+
+  React.useEffect(() => {
+    const handleMessage = (e: MessageEvent) => {
+      if (iframeRef.current && e.source === iframeRef.current.contentWindow) {
+        if (e.data && e.data.type === "AD_RESIZE" && typeof e.data.height === "number") {
+          if (e.data.height >= 10 && e.data.height <= 1200) {
+            setIframeHeight(e.data.height)
+          }
+        }
+      }
+    }
+    window.addEventListener("message", handleMessage)
+    return () => window.removeEventListener("message", handleMessage)
   }, [])
 
-  if (!html || !mounted) return null
-
-  const iframeSrcDoc = `
-    <!DOCTYPE html>
-    <html>
-      <head>
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <style>
-          html, body {
-            margin: 0 !important;
-            padding: 0 !important;
-            overflow: hidden !important;
-            background: transparent !important;
-            background-color: transparent !important;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            width: 100%;
-            height: 100%;
-          }
-          body > div, body > table, body > iframe {
-            background: transparent !important;
-            background-color: transparent !important;
-          }
-        </style>
-      </head>
-      <body>
-        ${html}
-      </body>
-    </html>
-  `
-
-  const width = 320
-  const height = 50
+  if (!html || !html.trim()) return null
 
   return (
-    <div className="w-full flex justify-center items-center overflow-hidden">
+    <div className="w-full flex justify-center items-center overflow-hidden my-1 min-h-[30px]">
       <iframe
-        srcDoc={iframeSrcDoc}
-        width={width}
-        height={height}
-        style={{ border: "none", overflow: "hidden", background: "transparent", backgroundColor: "transparent" }}
-        scrolling="no"
-        title="Ad Space"
-        loading="eager"
+        ref={iframeRef}
+        title="Advertisement"
+        className="w-full border-0 overflow-hidden bg-transparent transition-all duration-300"
+        style={{ border: 0, height: `${iframeHeight}px`, minHeight: "30px" }}
       />
     </div>
   )
-}
-
-const FooterScriptExecutor = ({ html }: { html: string | null | undefined }) => {
-  const containerRef = React.useRef<HTMLDivElement>(null)
-
-  React.useEffect(() => {
-    if (!html || !containerRef.current) return
-
-    containerRef.current.innerHTML = ""
-
-    const parser = new DOMParser()
-    const doc = parser.parseFromString(html, "text/html")
-
-    Array.from(doc.body.childNodes).forEach((node) => {
-      if (node.nodeName === "SCRIPT") {
-        const script = document.createElement("script")
-        Array.from((node as HTMLScriptElement).attributes).forEach((attr) => {
-          script.setAttribute(attr.name, attr.value)
-        })
-        script.textContent = (node as HTMLScriptElement).textContent
-        containerRef.current?.appendChild(script)
-      } else {
-        containerRef.current?.appendChild(node.cloneNode(true))
-      }
-    })
-  }, [html])
-
-  if (!html) return null
-
-  return (
-    <div
-      ref={containerRef}
-      className="w-full flex justify-center items-center overflow-hidden"
-    />
-  )
-}
+})
+AdScriptLoader.displayName = "AdScriptLoader"
 
 interface ClientProps {
   pageData: {
@@ -398,12 +494,6 @@ export default function LandingPageClient({ pageData }: ClientProps) {
         backgroundImage: "radial-gradient(circle at center, #2e0909 0%, #070202 100%)",
       }}
     >
-      {/* Background Pre-loader for Player Ads Script so ads are 100% pre-loaded before click */}
-      {pageData.playerAdsScript && (
-        <div className="fixed -left-[9999px] -top-[9999px] pointer-events-none opacity-0 size-0 overflow-hidden" aria-hidden="true">
-          <AdScriptLoader html={pageData.playerAdsScript} />
-        </div>
-      )}
       <HeaderScriptInjector html={pageData.headerAdsScript} />
 
 
@@ -781,7 +871,7 @@ export default function LandingPageClient({ pageData }: ClientProps) {
       {/* FOOTER: Ads Script Footer Injection */}
       <footer className="relative z-20 w-full max-w-3xl flex flex-col items-center gap-4 mt-12 mb-4">
         {pageData.footerAdsScript && (
-          <FooterScriptExecutor html={pageData.footerAdsScript} />
+          <FooterScriptInjector html={pageData.footerAdsScript} />
         )}
         <span className="text-[10px] text-zinc-600 font-semibold uppercase tracking-widest">
           © {new Date().getFullYear()} Makhonlaal Console • Secure Link System

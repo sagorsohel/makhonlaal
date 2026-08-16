@@ -9,9 +9,7 @@ export const revalidate = 0
 
 export async function generateMetadata(): Promise<Metadata> {
   try {
-    const query = db.select().from(pages).where(eq(pages.slug, "home")).limit(1)
-    const timeout = new Promise<any[]>((resolve) => setTimeout(() => resolve([]), 1200))
-    const results = await Promise.race([query, timeout])
+    const results = await db.select().from(pages).where(eq(pages.slug, "home")).limit(1)
     const title = results[0]?.title || "Default Live Stream"
     return {
       title: `${title} - Live Stream Online`,
@@ -62,8 +60,7 @@ export default async function Page() {
       return results[0] || null
     })()
 
-    const timeoutPromise = new Promise<null>((resolve) => setTimeout(() => resolve(null), 1200))
-    const matchedPage = await Promise.race([dbQueryPromise, timeoutPromise])
+    const matchedPage = await dbQueryPromise
 
     if (matchedPage) {
       pageData = matchedPage as any
