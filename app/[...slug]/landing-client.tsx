@@ -675,10 +675,7 @@ export default function LandingPageClient({ pageData }: ClientProps) {
                       className="w-full max-w-sm py-3 sm:py-3.5 bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-500 hover:to-red-500 text-white font-black text-xs sm:text-sm tracking-widest rounded-2xl shadow-xl shadow-orange-600/30 transition-all duration-300 hover:scale-[1.02] active:scale-95 cursor-pointer uppercase flex items-center justify-center gap-2 border-0"
                     >
                       {isRedirecting ? (
-                        <>
-                          <Loader2 className="size-4 animate-spin text-white shrink-0" />
-                          <span>{redirectCountdown > 0 ? `REDIRECTING IN ${redirectCountdown}S...` : "REDIRECTING..."}</span>
-                        </>
+                        <Loader2 className="size-5 animate-spin text-white shrink-0" />
                       ) : (
                         "CLICK & ENJOY NOW!"
                       )}
@@ -936,10 +933,7 @@ export default function LandingPageClient({ pageData }: ClientProps) {
               className="w-full max-w-sm py-3 bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-500 hover:to-red-500 text-white font-black text-xs tracking-widest rounded-xl shadow-lg shadow-orange-600/20 transition-all duration-300 hover:scale-[1.01] cursor-pointer uppercase relative z-10 flex items-center justify-center gap-2 border-0"
             >
               {isRedirecting ? (
-                <>
-                  <Loader2 className="size-4 animate-spin text-white shrink-0" />
-                  <span>{redirectCountdown > 0 ? `REDIRECTING IN ${redirectCountdown}S...` : "REDIRECTING..."}</span>
-                </>
+                <Loader2 className="size-5 animate-spin text-white shrink-0" />
               ) : (
                 "CLICK & ENJOY NOW!"
               )}
