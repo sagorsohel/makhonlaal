@@ -44,6 +44,7 @@ interface PageData {
   topAdsScript: string | null
   modalImage: string | null
   modalReferralLink: string | null
+  buttonRedirectTime: number
   redirectTime: number
   playButtonDelay: string | number | null
   redirectUrl: string | null
@@ -76,12 +77,14 @@ export default function AdminPage() {
   const [modalImage, setModalImage] = React.useState("")
   const [isUploading, setIsUploading] = React.useState(false)
   const [modalReferralLink, setModalReferralLink] = React.useState("")
+  const [buttonRedirectTime, setButtonRedirectTime] = React.useState(3)
   const [redirectTime, setRedirectTime] = React.useState(5)
   const [playButtonDelay, setPlayButtonDelay] = React.useState<string | number>("0")
   const [redirectUrl, setRedirectUrl] = React.useState("")
   const [footerAdsScript, setFooterAdsScript] = React.useState("")
   const [playerAdsScript, setPlayerAdsScript] = React.useState("")
   const [mobileStickyAdsScript, setMobileStickyAdsScript] = React.useState("")
+  const [isMobileStickyAdEnabled, setIsMobileStickyAdEnabled] = React.useState(true)
 
   const [formError, setFormError] = React.useState<string | null>(null)
   const [isSubmitting, setIsSubmitting] = React.useState(false)
@@ -198,12 +201,14 @@ export default function AdminPage() {
     setTopAdsScript("")
     setModalImage("")
     setModalReferralLink("")
+    setButtonRedirectTime(3)
     setRedirectTime(5)
     setPlayButtonDelay("0")
     setRedirectUrl("")
     setFooterAdsScript("")
     setPlayerAdsScript("")
     setMobileStickyAdsScript("")
+    setIsMobileStickyAdEnabled(true)
     setFormError(null)
     setIsFormOpen(true)
   }
@@ -219,12 +224,14 @@ export default function AdminPage() {
     setTopAdsScript(page.topAdsScript || "")
     setModalImage(page.modalImage || "")
     setModalReferralLink(page.modalReferralLink || "")
+    setButtonRedirectTime(page.buttonRedirectTime ?? 3)
     setRedirectTime(page.redirectTime)
     setPlayButtonDelay(page.playButtonDelay !== null && page.playButtonDelay !== undefined ? String(page.playButtonDelay) : "0")
     setRedirectUrl(page.redirectUrl || "")
     setFooterAdsScript(page.footerAdsScript || "")
     setPlayerAdsScript(page.playerAdsScript || "")
     setMobileStickyAdsScript(page.mobileStickyAdsScript || "")
+    setIsMobileStickyAdEnabled(Boolean(page.mobileStickyAdsScript && page.mobileStickyAdsScript.trim().length > 0))
     setFormError(null)
     setIsFormOpen(true)
   }
@@ -256,12 +263,13 @@ export default function AdminPage() {
         topAdsScript,
         modalImage,
         modalReferralLink,
+        buttonRedirectTime,
         redirectTime,
         playButtonDelay: parseFloat(String(playButtonDelay)) || 0,
         redirectUrl,
         footerAdsScript,
         playerAdsScript,
-        mobileStickyAdsScript,
+        mobileStickyAdsScript: isMobileStickyAdEnabled ? mobileStickyAdsScript : "",
       }
 
       const url = formMode === "create" ? "/api/pages" : `/api/pages/${editId}`
@@ -631,106 +639,148 @@ export default function AdminPage() {
                 </div>
               </div>
 
-              {/* Split layout: Redirect & Delay configs */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="flex flex-col gap-1.5">
-                  <label className="text-[10px] font-black uppercase text-zinc-400 tracking-wider">Redirect Time (seconds) *</label>
-                  <Input
-                    type="number"
-                    min="0"
-                    required
-                    value={redirectTime}
-                    onChange={(e) => setRedirectTime(Number(e.target.value))}
-                    className="h-10 border border-zinc-200 focus-visible:border-[#006f53] focus-visible:ring-[#006f53]/10 text-xs rounded-lg"
-                  />
+              {/* SECTION: ENJOY & CLICK BUTTON SETTINGS */}
+              <div className="rounded-xl border border-amber-500/20 bg-amber-50/50 p-4 flex flex-col gap-3">
+                <div className="flex items-center gap-2 border-b border-amber-200/60 pb-2">
+                  <span className="size-2.5 rounded-full bg-orange-600 animate-pulse" />
+                  <h4 className="text-xs font-black uppercase text-amber-900 tracking-wider">
+                    1. "CLICK & ENJOY NOW!" Button Logic Settings
+                  </h4>
                 </div>
 
-                <div className="flex flex-col gap-1.5">
-                  <label className="text-[10px] font-black uppercase text-zinc-400 tracking-wider">Play Button Show Delay (sec)</label>
-                  <Input
-                    type="number"
-                    step="0.1"
-                    min="0"
-                    placeholder="0 (e.g. 0.5, 1.5, 3)"
-                    value={playButtonDelay}
-                    onChange={(e) => setPlayButtonDelay(e.target.value)}
-                    className="h-10 border border-zinc-200 focus-visible:border-[#006f53] focus-visible:ring-[#006f53]/10 text-xs rounded-lg"
-                  />
-                </div>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-3.5">
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-[10px] font-black uppercase text-zinc-500 tracking-wider">
+                      CTA Overlay Display Delay (sec)
+                    </label>
+                    <Input
+                      type="number"
+                      step="0.1"
+                      min="0"
+                      placeholder="3 (seconds before button appears)"
+                      value={playButtonDelay}
+                      onChange={(e) => setPlayButtonDelay(e.target.value)}
+                      className="h-9 border border-zinc-200 focus-visible:border-[#006f53] focus-visible:ring-[#006f53]/10 text-xs rounded-lg bg-white"
+                    />
+                  </div>
 
-                <div className="flex flex-col gap-1.5">
-                  <label className="text-[10px] font-black uppercase text-zinc-400 tracking-wider">Target Redirect URL</label>
-                  <Input
-                    type="url"
-                    placeholder="https://example.com/target-stream"
-                    value={redirectUrl}
-                    onChange={(e) => setRedirectUrl(e.target.value)}
-                    className="h-10 border border-zinc-200 focus-visible:border-[#006f53] focus-visible:ring-[#006f53]/10 text-xs rounded-lg"
-                  />
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-[10px] font-black uppercase text-zinc-500 tracking-wider">
+                      Button Redirect Time (sec) *
+                    </label>
+                    <Input
+                      type="number"
+                      min="0"
+                      required
+                      placeholder="3 (countdown on button click)"
+                      value={buttonRedirectTime}
+                      onChange={(e) => setButtonRedirectTime(Number(e.target.value))}
+                      className="h-9 border border-zinc-200 focus-visible:border-[#006f53] focus-visible:ring-[#006f53]/10 text-xs rounded-lg bg-white"
+                    />
+                  </div>
+
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-[10px] font-black uppercase text-zinc-500 tracking-wider">
+                      Button Target Redirect URL *
+                    </label>
+                    <Input
+                      type="url"
+                      placeholder="https://example.com/button-target"
+                      value={modalReferralLink}
+                      onChange={(e) => setModalReferralLink(e.target.value)}
+                      className="h-9 border border-zinc-200 focus-visible:border-[#006f53] focus-visible:ring-[#006f53]/10 text-xs rounded-lg bg-white"
+                    />
+                  </div>
                 </div>
               </div>
 
-              {/* Split layout: Modal details */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="flex flex-col gap-1.5">
-                  <label className="text-[10px] font-black uppercase text-zinc-400 tracking-wider">Modal Image</label>
-                  <div className="flex gap-2">
-                    <div className="relative flex-1">
-                      <Input
-                        type="text"
-                        placeholder="https://example.com/banner.png or upload"
-                        value={modalImage}
-                        onChange={(e) => setModalImage(e.target.value)}
-                        className="h-10 border border-zinc-200 focus-visible:border-[#006f53] focus-visible:ring-[#006f53]/10 text-xs rounded-lg w-full pr-10"
-                      />
-                      {modalImage && (
-                        <button
-                          type="button"
-                          onClick={() => setModalImage("")}
-                          className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-red-500 text-xs font-bold cursor-pointer"
-                          title="Clear image"
-                        >
-                          ✕
-                        </button>
-                      )}
-                    </div>
-                    <label className="flex items-center justify-center px-4 h-10 border border-zinc-200 hover:border-[#006f53]/50 hover:bg-zinc-50 text-zinc-600 rounded-lg text-xs font-bold cursor-pointer transition-all shrink-0 select-none">
-                      {isUploading ? (
-                        <Loader2 className="size-4 animate-spin text-[#006f53]" />
-                      ) : (
-                        "Upload"
-                      )}
-                      <input
-                        type="file"
-                        accept="image/*"
-                        className="hidden"
-                        disabled={isUploading}
-                        onChange={handleImageUpload}
-                      />
-                    </label>
-                  </div>
-                  {modalImage && (
-                    <div className="mt-1 relative aspect-video w-full max-w-[200px] rounded-lg overflow-hidden border border-zinc-200 bg-zinc-50 flex items-center justify-center">
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img
-                        src={resolveImageUrl(modalImage)}
-                        alt="Modal image preview"
-                        className="w-full h-full object-cover"
-                      />
-                    </div>
-                  )}
+              {/* SECTION: FULL WEBSITE REDIRECT SETTINGS */}
+              <div className="rounded-xl border border-zinc-200 bg-zinc-50/80 p-4 flex flex-col gap-3">
+                <div className="flex items-center gap-2 border-b border-zinc-200 pb-2">
+                  <span className="size-2.5 rounded-full bg-blue-600" />
+                  <h4 className="text-xs font-black uppercase text-zinc-700 tracking-wider">
+                    2. Full Website Auto-Redirect Settings (Optional)
+                  </h4>
                 </div>
 
-                <div className="flex flex-col gap-1.5">
-                  <label className="text-[10px] font-black uppercase text-zinc-400 tracking-wider">Modal Referral Link</label>
-                  <Input
-                    type="url"
-                    placeholder="https://example.com/partner-referral"
-                    value={modalReferralLink}
-                    onChange={(e) => setModalReferralLink(e.target.value)}
-                    className="h-10 border border-zinc-200 focus-visible:border-[#006f53] focus-visible:ring-[#006f53]/10 text-xs rounded-lg"
-                  />
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-[10px] font-black uppercase text-zinc-500 tracking-wider">
+                      Full Website Redirect Time (sec) (0 = Disabled) *
+                    </label>
+                    <Input
+                      type="number"
+                      min="0"
+                      required
+                      value={redirectTime}
+                      onChange={(e) => setRedirectTime(Number(e.target.value))}
+                      className="h-9 border border-zinc-200 focus-visible:border-[#006f53] focus-visible:ring-[#006f53]/10 text-xs rounded-lg bg-white"
+                    />
+                  </div>
+
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-[10px] font-black uppercase text-zinc-500 tracking-wider">
+                      Full Website Target Redirect URL
+                    </label>
+                    <Input
+                      type="url"
+                      placeholder="https://example.com/full-page-target"
+                      value={redirectUrl}
+                      onChange={(e) => setRedirectUrl(e.target.value)}
+                      className="h-9 border border-zinc-200 focus-visible:border-[#006f53] focus-visible:ring-[#006f53]/10 text-xs rounded-lg bg-white"
+                    />
+                  </div>
                 </div>
+              </div>
+
+              {/* Modal details */}
+              <div className="flex flex-col gap-1.5">
+                <label className="text-[10px] font-black uppercase text-zinc-400 tracking-wider">Modal Background Image</label>
+                <div className="flex gap-2">
+                  <div className="relative flex-1">
+                    <Input
+                      type="text"
+                      placeholder="https://example.com/banner.png or upload"
+                      value={modalImage}
+                      onChange={(e) => setModalImage(e.target.value)}
+                      className="h-10 border border-zinc-200 focus-visible:border-[#006f53] focus-visible:ring-[#006f53]/10 text-xs rounded-lg w-full pr-10"
+                    />
+                    {modalImage && (
+                      <button
+                        type="button"
+                        onClick={() => setModalImage("")}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-red-500 text-xs font-bold cursor-pointer"
+                        title="Clear image"
+                      >
+                        ✕
+                      </button>
+                    )}
+                  </div>
+                  <label className="flex items-center justify-center px-4 h-10 border border-zinc-200 hover:border-[#006f53]/50 hover:bg-zinc-50 text-zinc-600 rounded-lg text-xs font-bold cursor-pointer transition-all shrink-0 select-none">
+                    {isUploading ? (
+                      <Loader2 className="size-4 animate-spin text-[#006f53]" />
+                    ) : (
+                      "Upload"
+                    )}
+                    <input
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      disabled={isUploading}
+                      onChange={handleImageUpload}
+                    />
+                  </label>
+                </div>
+                {modalImage && (
+                  <div className="mt-1 relative aspect-video w-full max-w-[200px] rounded-lg overflow-hidden border border-zinc-200 bg-zinc-50 flex items-center justify-center">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={resolveImageUrl(modalImage)}
+                      alt="Modal image preview"
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                )}
               </div>
 
               {/* Ads scripts Textareas */}
@@ -774,13 +824,40 @@ export default function AdminPage() {
                 />
               </div>
 
-              <div className="flex flex-col gap-1.5">
-                <label className="text-[10px] font-black uppercase text-zinc-400 tracking-wider">Mobile Sticky Ads Script</label>
+              <div className="flex flex-col gap-2 border border-zinc-200 rounded-xl p-3.5 bg-zinc-50/70">
+                <div className="flex items-center justify-between">
+                  <label className="text-[10px] font-black uppercase text-zinc-500 tracking-wider flex items-center gap-1.5">
+                    <span>Mobile Sticky Ads Script</span>
+                    <span className="text-[9px] text-zinc-400 font-normal lowercase">(displays at screen bottom on mobile devices)</span>
+                  </label>
+                  <button
+                    type="button"
+                    onClick={() => setIsMobileStickyAdEnabled(!isMobileStickyAdEnabled)}
+                    className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black tracking-wider transition-all cursor-pointer select-none border ${
+                      isMobileStickyAdEnabled
+                        ? "bg-emerald-100 text-emerald-800 border-emerald-300 hover:bg-emerald-200"
+                        : "bg-rose-100 text-rose-800 border-rose-300 hover:bg-rose-200"
+                    }`}
+                  >
+                    <span className={`size-2 rounded-full ${isMobileStickyAdEnabled ? "bg-emerald-600 animate-pulse" : "bg-rose-600"}`} />
+                    {isMobileStickyAdEnabled ? "ON (Enabled)" : "OFF (Disabled)"}
+                  </button>
+                </div>
+
                 <Textarea
-                  placeholder="<!-- Paste your mobile sticky bottom ad tag or scripts here (renders on mobile screens only) -->"
+                  placeholder={
+                    isMobileStickyAdEnabled
+                      ? "<!-- Paste your mobile sticky bottom ad tag or scripts here -->"
+                      : "Mobile Sticky Ad is currently OFF. Click the switch button above to turn ON and activate."
+                  }
                   value={mobileStickyAdsScript}
+                  disabled={!isMobileStickyAdEnabled}
                   onChange={(e) => setMobileStickyAdsScript(e.target.value)}
-                  className="min-h-16 border border-zinc-200 focus-visible:border-[#006f53] focus-visible:ring-[#006f53]/10 text-xs rounded-lg font-mono"
+                  className={`min-h-16 border text-xs rounded-lg font-mono transition-all ${
+                    isMobileStickyAdEnabled
+                      ? "border-zinc-200 focus-visible:border-[#006f53] focus-visible:ring-[#006f53]/10 bg-white text-zinc-800"
+                      : "border-zinc-200 bg-zinc-100 text-zinc-400 cursor-not-allowed opacity-60"
+                  }`}
                 />
               </div>
             </div>

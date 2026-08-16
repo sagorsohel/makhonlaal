@@ -34,6 +34,7 @@ export default async function Page() {
     topAdsScript: null,
     modalImage: null,
     modalReferralLink: null,
+    buttonRedirectTime: 3,
     redirectTime: 5,
     playButtonDelay: "0",
     redirectUrl: null,

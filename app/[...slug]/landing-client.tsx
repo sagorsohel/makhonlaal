@@ -250,6 +250,7 @@ interface ClientProps {
     topAdsScript: string | null
     modalImage: string | null
     modalReferralLink: string | null
+    buttonRedirectTime?: number | null
     redirectTime: number
     playButtonDelay?: string | number | null
     redirectUrl: string | null
@@ -304,9 +305,9 @@ export default function LandingPageClient({ pageData }: ClientProps) {
     return () => media.removeEventListener("change", listener)
   }, [])
 
-  // Countdown timer for automatic redirect
+  // Countdown timer for automatic redirect (Full Website Auto-Redirect)
   React.useEffect(() => {
-    // 0 seconds means NO automatic redirect
+    // 0 seconds means NO automatic full website redirect
     if (pageData.redirectTime === 0) {
       return
     }
@@ -328,9 +329,11 @@ export default function LandingPageClient({ pageData }: ClientProps) {
   const handlePlayClick = () => {
     setIsPlaying(true)
     setShowInlineSignup(false)
+    const delaySec = parseFloat(String(pageData.playButtonDelay ?? 2))
+    const delayMs = isNaN(delaySec) || delaySec <= 0 ? 2000 : delaySec * 1000
     setTimeout(() => {
       setShowInlineSignup(true)
-    }, 2000)
+    }, delayMs)
   }
 
   // Auto-hide controls in playing mode
@@ -344,11 +347,41 @@ export default function LandingPageClient({ pageData }: ClientProps) {
     return () => clearTimeout(timeout)
   }, [isPlaying, showControls])
 
+  // Button Redirect Countdown state
+  const [isRedirecting, setIsRedirecting] = React.useState(false)
+  const initialBtnTime = pageData.buttonRedirectTime !== undefined && pageData.buttonRedirectTime !== null
+    ? Number(pageData.buttonRedirectTime)
+    : 3
+  const [redirectCountdown, setRedirectCountdown] = React.useState(initialBtnTime)
+
   const handleModalClick = () => {
     const targetUrl = pageData.modalReferralLink || pageData.redirectUrl
-    if (targetUrl) {
+    if (!targetUrl) return
+
+    if (isRedirecting) return
+
+    setIsRedirecting(true)
+    const btnDelaySec = pageData.buttonRedirectTime !== undefined && pageData.buttonRedirectTime !== null
+      ? Number(pageData.buttonRedirectTime)
+      : 3
+
+    if (btnDelaySec <= 0) {
       window.location.href = targetUrl
+      return
     }
+
+    setRedirectCountdown(btnDelaySec)
+    let current = btnDelaySec
+
+    const interval = setInterval(() => {
+      current -= 1
+      if (current <= 0) {
+        clearInterval(interval)
+        window.location.href = targetUrl
+      } else {
+        setRedirectCountdown(current)
+      }
+    }, 1000)
   }
 
   const handleSearchSubmit = (e: React.FormEvent) => {
@@ -533,9 +566,17 @@ export default function LandingPageClient({ pageData }: ClientProps) {
                     {/* CTA Button */}
                     <button
                       onClick={handleModalClick}
-                      className="w-full max-w-sm py-3 sm:py-3.5 bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-500 hover:to-red-500 text-white font-black text-xs sm:text-sm tracking-widest rounded-2xl shadow-xl shadow-orange-600/30 transition-all duration-300 hover:scale-[1.02] active:scale-95 cursor-pointer uppercase"
+                      disabled={isRedirecting}
+                      className="w-full max-w-sm py-3 sm:py-3.5 bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-500 hover:to-red-500 text-white font-black text-xs sm:text-sm tracking-widest rounded-2xl shadow-xl shadow-orange-600/30 transition-all duration-300 hover:scale-[1.02] active:scale-95 cursor-pointer uppercase flex items-center justify-center gap-2 border-0"
                     >
-                      CLICK & ENJOY NOW!
+                      {isRedirecting ? (
+                        <>
+                          <Loader2 className="size-4 animate-spin text-white shrink-0" />
+                          <span>{redirectCountdown > 0 ? `REDIRECTING IN ${redirectCountdown}S...` : "REDIRECTING..."}</span>
+                        </>
+                      ) : (
+                        "CLICK & ENJOY NOW!"
+                      )}
                     </button>
 
                     {/* Player Ads Script */}
@@ -786,9 +827,17 @@ export default function LandingPageClient({ pageData }: ClientProps) {
             {/* CTA Button */}
             <button
               onClick={handleModalClick}
-              className="w-full max-w-sm py-3 bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-500 hover:to-red-500 text-white font-extrabold text-xs tracking-widest rounded-xl shadow-lg shadow-orange-600/20 transition-all duration-300 hover:scale-[1.01] cursor-pointer uppercase relative z-10"
+              disabled={isRedirecting}
+              className="w-full max-w-sm py-3 bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-500 hover:to-red-500 text-white font-black text-xs tracking-widest rounded-xl shadow-lg shadow-orange-600/20 transition-all duration-300 hover:scale-[1.01] cursor-pointer uppercase relative z-10 flex items-center justify-center gap-2 border-0"
             >
-              Click & Enjoy Now!
+              {isRedirecting ? (
+                <>
+                  <Loader2 className="size-4 animate-spin text-white shrink-0" />
+                  <span>{redirectCountdown > 0 ? `REDIRECTING IN ${redirectCountdown}S...` : "REDIRECTING..."}</span>
+                </>
+              ) : (
+                "CLICK & ENJOY NOW!"
+              )}
             </button>
 
             {/* Player Ads Script */}

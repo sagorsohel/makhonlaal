@@ -76,6 +76,7 @@ async function initializeDatabase() {
         \`top_ads_script\` TEXT NULL,
         \`modal_image\` TEXT NULL,
         \`modal_referral_link\` TEXT NULL,
+        \`button_redirect_time\` INT NOT NULL DEFAULT 3,
         \`redirect_time\` INT NOT NULL DEFAULT 5,
         \`play_button_delay\` VARCHAR(50) NOT NULL DEFAULT '0',
         \`redirect_url\` TEXT NULL,
@@ -85,6 +86,14 @@ async function initializeDatabase() {
         \`created_at\` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
       ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
     `)
+
+    try {
+      await connection.execute(`
+        ALTER TABLE \`pages\` ADD COLUMN \`button_redirect_time\` INT NOT NULL DEFAULT 3;
+      `)
+    } catch {
+      // Column may already exist
+    }
 
     try {
       await connection.execute(`
