@@ -1,10 +1,8 @@
 import { db } from "@/db"
 import { pages } from "@/db/schema"
-import { eq, desc } from "drizzle-orm"
+import { eq, desc, inArray } from "drizzle-orm"
 import LandingPageClient from "./landing-client"
 import { Metadata } from "next"
-
-import { cache } from "react"
 
 export const dynamic = "force-dynamic"
 export const revalidate = 0
@@ -24,7 +22,7 @@ function getAbsoluteImageUrl(url: string | null | undefined, base: string) {
   return `${base}${url.startsWith("/") ? "" : "/"}${url}`
 }
 
-const fetchMatchingPage = cache(async (slugParam: string[]) => {
+async function fetchMatchingPage(slugParam: string[]) {
   const slugArray = Array.isArray(slugParam) ? slugParam : [slugParam]
   const fullPath = slugArray.join("/")
   const lastSegment = slugArray[slugArray.length - 1]
@@ -48,39 +46,26 @@ const fetchMatchingPage = cache(async (slugParam: string[]) => {
   }
 
   try {
-    const dbQueryPromise = (async () => {
-      // 1. Check exact full path match (e.g., "dsdsd/fdfd/fdf")
-      let results = await db.select().from(pages).where(eq(pages.slug, fullPath))
+    const candidates = Array.from(new Set([fullPath, lastSegment, firstSegment].filter(Boolean)))
+    const results = await db.select().from(pages).where(inArray(pages.slug, candidates))
 
-      // 2. Check last segment match (e.g., "fdf")
-      if (results.length === 0 && lastSegment) {
-        results = await db.select().from(pages).where(eq(pages.slug, lastSegment))
-      }
-
-      // 3. Check first segment match (e.g., "dsdsd")
-      if (results.length === 0 && firstSegment) {
-        results = await db.select().from(pages).where(eq(pages.slug, firstSegment))
-      }
-
-      // 4. Fallback to latest created page in DB
-      if (results.length === 0) {
-        results = await db.select().from(pages).orderBy(desc(pages.createdAt)).limit(1)
-      }
-
-      return results[0] || null
-    })()
-
-    const matchedPage = await dbQueryPromise
-
-    if (matchedPage) {
-      return matchedPage
+    if (results.length > 0) {
+      const match =
+        results.find((p) => p.slug === fullPath) ||
+        results.find((p) => p.slug === lastSegment) ||
+        results.find((p) => p.slug === firstSegment) ||
+        results[0]
+      return match
     }
+
+    const latest = await db.select().from(pages).orderBy(desc(pages.createdAt)).limit(1)
+    if (latest.length > 0) return latest[0]
   } catch (err) {
     console.error("Database query failed in fetchMatchingPage:", err)
   }
 
   return fallback
-})
+}
 
 // Generate dynamic metadata for maximum SEO
 export async function generateMetadata({ params, searchParams }: PageProps): Promise<Metadata> {

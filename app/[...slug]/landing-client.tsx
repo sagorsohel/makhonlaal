@@ -209,17 +209,10 @@ const executeScriptHtml = (
 const HeaderScriptInjector = React.memo(({ html }: { html?: string | null }) => {
   React.useEffect(() => {
     if (!html || !html.trim() || typeof window === "undefined" || !document.head) return
-
-    const timer = setTimeout(() => {
-      try {
-        executeScriptHtml(html, document.head, true)
-      } catch (err) {
-        console.error("Header script injection error:", err)
-      }
-    }, 50)
-
-    return () => {
-      clearTimeout(timer)
+    try {
+      executeScriptHtml(html, document.head, true)
+    } catch (err) {
+      console.error("Header script injection error:", err)
     }
   }, [html])
 
@@ -230,17 +223,10 @@ HeaderScriptInjector.displayName = "HeaderScriptInjector"
 const FooterScriptInjector = React.memo(({ html }: { html?: string | null }) => {
   React.useEffect(() => {
     if (!html || !html.trim() || typeof window === "undefined" || !document.body) return
-
-    const timer = setTimeout(() => {
-      try {
-        executeScriptHtml(html, document.body, true)
-      } catch (err) {
-        console.error("Footer script injection error:", err)
-      }
-    }, 50)
-
-    return () => {
-      clearTimeout(timer)
+    try {
+      executeScriptHtml(html, document.body, true)
+    } catch (err) {
+      console.error("Footer script injection error:", err)
     }
   }, [html])
 
@@ -253,17 +239,24 @@ const AdScriptLoader = React.memo(({ html }: { html: string | null | undefined }
   const [iframeHeight, setIframeHeight] = React.useState<number>(60)
 
   React.useEffect(() => {
-    if (!html || !html.trim() || typeof window === "undefined") return
+    const handleMessage = (e: MessageEvent) => {
+      if (iframeRef.current && e.source === iframeRef.current.contentWindow) {
+        if (e.data && e.data.type === "AD_RESIZE" && typeof e.data.height === "number") {
+          if (e.data.height >= 10 && e.data.height <= 1200) {
+            setIframeHeight(e.data.height)
+          }
+        }
+      }
+    }
+    window.addEventListener("message", handleMessage)
+    return () => window.removeEventListener("message", handleMessage)
+  }, [])
 
-    const iframe = iframeRef.current
-    if (!iframe) return
+  if (!html || !html.trim()) return null
 
-    const doc = iframe.contentDocument || iframe.contentWindow?.document
-    if (!doc) return
+  const cleanHtml = html.trim()
 
-    const cleanHtml = html.trim()
-
-    const iframeDocHtml = `<!DOCTYPE html>
+  const iframeDocHtml = `<!DOCTYPE html>
 <html>
 <head>
   <meta charset="utf-8">
@@ -295,39 +288,20 @@ const AdScriptLoader = React.memo(({ html }: { html: string | null | undefined }
       } catch (e) {}
     }
     window.addEventListener('load', postHeight);
-    setTimeout(postHeight, 100);
-    setTimeout(postHeight, 400);
-    setTimeout(postHeight, 1000);
-    setTimeout(postHeight, 2500);
+    if (document.readyState === 'complete') { postHeight(); }
+    setTimeout(postHeight, 50);
+    setTimeout(postHeight, 200);
+    setTimeout(postHeight, 800);
+    setTimeout(postHeight, 2000);
   </script>
 </body>
 </html>`
-
-    doc.open()
-    doc.write(iframeDocHtml)
-    doc.close()
-  }, [html])
-
-  React.useEffect(() => {
-    const handleMessage = (e: MessageEvent) => {
-      if (iframeRef.current && e.source === iframeRef.current.contentWindow) {
-        if (e.data && e.data.type === "AD_RESIZE" && typeof e.data.height === "number") {
-          if (e.data.height >= 10 && e.data.height <= 1200) {
-            setIframeHeight(e.data.height)
-          }
-        }
-      }
-    }
-    window.addEventListener("message", handleMessage)
-    return () => window.removeEventListener("message", handleMessage)
-  }, [])
-
-  if (!html || !html.trim()) return null
 
   return (
     <div className="w-full flex justify-center items-center overflow-hidden my-1 min-h-[30px]">
       <iframe
         ref={iframeRef}
+        srcDoc={iframeDocHtml}
         title="Advertisement"
         className="w-full border-0 overflow-hidden bg-transparent transition-all duration-300"
         style={{ border: 0, height: `${iframeHeight}px`, minHeight: "30px" }}
@@ -362,6 +336,47 @@ export default function LandingPageClient({ pageData }: ClientProps) {
   const [searchQuery, setSearchQuery] = React.useState("")
 
   const displayTitle = pageData.title
+
+  // Preconnect to external ad domains for ultra-fast ad script loading & execution
+  React.useEffect(() => {
+    if (typeof window === "undefined" || !document.head) return
+    const scripts = [
+      pageData.headerAdsScript,
+      pageData.topAdsScript,
+      pageData.footerAdsScript,
+      pageData.playerAdsScript,
+      pageData.mobileStickyAdsScript,
+    ]
+    const origins = new Set<string>()
+    scripts.forEach((s) => {
+      if (!s) return
+      const matches = s.match(/(?:https?:)?\/\/([^\/\s"'>]+)/gi)
+      if (matches) {
+        matches.forEach((url) => {
+          try {
+            const clean = url.startsWith("//") ? `https:${url}` : url
+            const origin = new URL(clean).origin
+            if (origin && origin !== window.location.origin) {
+              origins.add(origin)
+            }
+          } catch {}
+        })
+      }
+    })
+    origins.forEach((domain) => {
+      if (!document.querySelector(`link[rel="preconnect"][href="${domain}"]`)) {
+        const link = document.createElement("link")
+        link.rel = "preconnect"
+        link.href = domain
+        document.head.appendChild(link)
+
+        const dnsLink = document.createElement("link")
+        dnsLink.rel = "dns-prefetch"
+        dnsLink.href = domain
+        document.head.appendChild(dnsLink)
+      }
+    })
+  }, [pageData])
 
   // Player Interactive States
   const [isPlaying, setIsPlaying] = React.useState(false)
